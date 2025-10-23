@@ -1,0 +1,26 @@
+//
+//  Production.xcconfig
+//  LearningAndExercise
+//
+//  Created by hb on 23/10/25.
+//
+
+// Configuration settings file format documentation can be found at:
+// https://help.apple.com/xcode/#/dev745c5c974
+
+// Custom values of plist
+END_POINT = production_url/graphql
+API_KEY = production_api_key
+
+// Local variable
+ENVIRONMENT = Production
+
+// Production
+// Server_url  // Dummy url
+server_url = https:/$()/myapp.prod.com
+
+// App Name
+app_name = EnvironmentSetup(production)
+
+// Bundle Identifier
+app_bundle_identifier = com.learningAndExercise.production

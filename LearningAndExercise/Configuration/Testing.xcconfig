@@ -1,0 +1,27 @@
+//
+//  Testing.xcconfig
+//  LearningAndExercise
+//
+//  Created by hb on 23/10/25.
+//
+
+// Configuration settings file format documentation can be found at:
+// https://help.apple.com/xcode/#/dev745c5c974
+
+
+// Custom values of plist
+END_POINT = testing_url/graphql
+API_KEY = testing_api_key
+
+// Local variable
+ENVIRONMENT = Testing
+
+// Testing
+// Server_url  // Dummy url
+server_url = https:/$()/myapp.testing.com
+
+// App Name
+app_name = EnvironmentSetup(testing)
+
+// Bundle Identifier
+app_bundle_identifier = com.learningAndExercise.testing
