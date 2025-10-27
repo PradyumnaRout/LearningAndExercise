@@ -8,6 +8,9 @@
 import SwiftUI
 
 struct ContentView: View {
+    
+    var pub = SubjectPassThrough()
+    
     var body: some View {
         VStack {
             Image(systemName: "globe")
@@ -17,7 +20,8 @@ struct ContentView: View {
         }
         .padding()
         .onAppear {
-            AppEnvironment.logConfiguration()
+//            AppEnvironment.logConfiguration()
+            pub.subscribe()
         }
     }
 }
