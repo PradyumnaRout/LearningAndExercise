@@ -85,7 +85,7 @@ let cancellable = publisher.sink(
 )
 
 
-// Custom Publisher
+// ✅ Custom Publisher
 protocol MyPublisher {
     associatedtype Output
     associatedtype Failure: Error
@@ -132,8 +132,12 @@ struct StringPublisher: MyPublisher {
 final class StringSubscriber: MySubscriber {
     typealias Input = String
     typealias Failure = Never
+    
+    private var subscription: MySubscription?       // Optional if you want to cancel or to call other method outside the function
 
     func receive(subscription: MySubscription) {
+        self.subscription = subscription
+        
         if subscription.inputValue.count > 5 {
             subscription.request(subscription.inputValue)
         }
@@ -141,6 +145,7 @@ final class StringSubscriber: MySubscriber {
 
     func receive(_ input: String) {
         print("Received value: \(input)")
+//        subscription?.cancel()   // ✅ Cancel from subscriber logic
     }
 
     func receive(completion: Subscribers.Completion<Never>) {

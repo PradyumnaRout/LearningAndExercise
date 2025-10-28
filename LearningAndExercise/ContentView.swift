@@ -9,7 +9,12 @@ import SwiftUI
 
 struct ContentView: View {
     
-    var pub = SubjectPassThrough()
+    var sub = OperatorSwitchToLatest()
+    
+    // Custom publisher
+//        let publisher = StringPublisher(inputValue: "hello world")
+//        let subscriber = StringSubscriber()
+
     
     var body: some View {
         VStack {
@@ -20,8 +25,10 @@ struct ContentView: View {
         }
         .padding()
         .onAppear {
+            // Custom publisher
+//            publisher.subscribe(subscriber)
 //            AppEnvironment.logConfiguration()
-            pub.subscribe()
+            sub.operateSwitchToLatest()
         }
     }
 }

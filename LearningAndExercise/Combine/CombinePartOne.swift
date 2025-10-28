@@ -51,6 +51,30 @@
      subject.send("Second!") // A hears this
  
  
+ 
+Cancellable : - (Why it is necessary.)
+     ✅ Combine publishers only continue working if something holds onto the subscription
+
+     Meaning: if you don’t store the AnyCancellable, the publisher is usually immediately cancelled.
+
+     Why "usually"… but sometimes not?
+
+     The rule
+
+     A Combine pipeline only runs as long as there is an active subscriber.
+     That subscriber is the AnyCancellable.
+
+     If you don’t store it somewhere (like a property), it gets deallocated at the end of the current scope.
+     When that happens, your subscription ends. The publisher might fire once or not at all depending on timing.
+
+     Why does it sometimes appear to work?
+
+     Because Swift performs optimizations. If the subscription is created inside something that stays alive a bit longer (like a SwiftUI body, or a function that itself keeps references around), the cancellable may hang out temporarily before deallocation. So the event gets through before garbage cleanup kicks in.
+
+     This feels like:
+     “I didn’t pay my rent, but the landlord forgot to check for a few days, so I still lived there.”
+ 
+ 
  🔹 Key Takeaways from Part 1 ->
  Combine = Unified framework for handling asynchronous values.
  A publisher emits values → a subscriber consumes them.

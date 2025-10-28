@@ -36,6 +36,16 @@ import Foundation
  Output - The type of value it publishes.
  Failure - The type of error it might publish (or Neve if it can not fail).
  
+ 🔹 LifeCycle of Publisher -  After either a regular finished event or a failure, the subject will pass no more values. This is due    to the lifecycle of a subject.
+ 
+ 🔹 Key Takeaways
+         Publishers emit values and completion events.
+         Just is for one-off values.
+         Future is for async, single-value work.
+         PassthroughSubject is for manual event broadcasting.
+         CurrentValueSubject holds onto the latest value.
+         Deferred creates publishers only when subscribed.
+         Collections can easily become publishers with .publisher.
  */
 
 // 🔹 Common Publishers in Combine
@@ -288,7 +298,6 @@ class UploaderCurrValSubject {
         self.startUploading()
         self.failUpload()
 //        self.finishUpload()
-        // After either a regular finished event or a failure, the subject will pass no more values. This is due to the lifecycle of a subject.
 
     }
 }
@@ -381,7 +390,7 @@ struct ChatRoom {
  A Deferred publisher in Combine waits until it has a subscriber before initializing the underlying publisher. This delay in creation is useful for optimising performance by avoiding unnecessary work until there’s a demand for data. Additionally, it’s compatible with operators like retry
  */
 
-struct PublisherDeferred {
+struct DeferredPub {
     func subscribe() {
         let deferredPublisher = Deferred {
             Future<String, Never> { promise in
@@ -395,5 +404,16 @@ struct PublisherDeferred {
 
 
 // 5. Publisher From Collections:
+// You can turns an array, ranges and sequences into publishers.
+class CollectionPub {
+    var cancellable = Set<AnyCancellable>()
+    let arrayOne = [1, 2, 3, 4, 5]
+    
+    func subscribeArray() {
+        arrayOne.publisher
+            .sink { print("Value: \($0)") }
+            .store(in: &cancellable)
+    }
+}
 
 
