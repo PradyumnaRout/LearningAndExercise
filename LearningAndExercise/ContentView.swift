@@ -9,7 +9,7 @@ import SwiftUI
 
 struct ContentView: View {
     
-    var sub = OperatorSwitchToLatest()
+    var sub = OperatorScan()
     
     // Custom publisher
 //        let publisher = StringPublisher(inputValue: "hello world")
@@ -28,7 +28,7 @@ struct ContentView: View {
             // Custom publisher
 //            publisher.subscribe(subscriber)
 //            AppEnvironment.logConfiguration()
-            sub.operateSwitchToLatest()
+            sub.operateScan()
         }
     }
 }

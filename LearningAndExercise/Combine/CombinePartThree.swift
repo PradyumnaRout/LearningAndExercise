@@ -120,7 +120,7 @@ final class IntSubscriber: Subscriber {
     
     func receive(subscription: any Subscription) {
         print("Subscribed")
-        subscription.request(.max(2))   // Request only 2 values.
+        subscription.request(.max(3))   // Request only 3 values.
     }
     
     func receive(_ input: Int) -> Subscribers.Demand {
@@ -135,15 +135,60 @@ final class IntSubscriber: Subscriber {
 
 struct UseIntSubscriber {
     func callIntSubs() {
-        let publisher = [10,20,30,40,50].publisher
+        let publisher = [10,20,30,40,50,60].publisher
         
-        let filterPublisher = [10, 20, 30, 40, 50].publisher
+        let filterPublisher = [10, 20, 30, 40, 50, 60].publisher
             .map { $0 * 2 }
             .filter { $0 > 40 }
         
         let subscriber = IntSubscriber()
         
-        filterPublisher.subscribe(subscriber)
+        filterPublisher.subscribe(subscriber)       // Output - 60, 80, 100 (the first three which matched the condition)
+    }
+    
+    // Can also use subjects (Passthrough/CurrentValue)
+    func testPassThrough() {
+        let subject = PassthroughSubject<Int, Never>()
+        let subscriber = IntSubscriber()
+        
+        subject.subscribe(subscriber)
+        
+        subject.send(5)
+        subject.send(10)
+        subject.send(15)
+        subject.send(20)
+        subject.send(completion: .finished)
+        
+        /**
+         Output -
+                 Subscribed
+                 Received 5
+                 Received 10
+                 Received 15
+                 Completed
+         */
+    }
+    
+    func testCurrentValue() {
+        let subject = CurrentValueSubject<Int, Never>(1)
+        let subscriber = IntSubscriber()
+        
+        subject.subscribe(subscriber)
+        
+        subject.send(20)
+        subject.send(30)
+        subject.send(40)
+        subject.send(50)
+        subject.send(completion: .finished)
+        
+        /**
+         Output -
+                 Subscribed
+                 Received 1
+                 Received 20
+                 Received 30
+                 Completed
+         */
     }
 }
 
