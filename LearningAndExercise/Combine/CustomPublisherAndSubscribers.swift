@@ -85,7 +85,7 @@ let cancellable = publisher.sink(
 )
 
 
-// ✅ Custom Publisher
+// ✅ Custom Publisher Protocol
 protocol MyPublisher {
     associatedtype Output
     associatedtype Failure: Error
@@ -164,6 +164,7 @@ final class StringSubscription<S: MySubscriber>: MySubscription where S.Input ==
         self.inputValue = inputValue
     }
     
+    // All the data manipulation takes place here.
     func request(_ demand: String) {
         guard !isCancelled else { return }
         

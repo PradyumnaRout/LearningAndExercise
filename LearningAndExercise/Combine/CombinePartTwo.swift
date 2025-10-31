@@ -10,7 +10,7 @@ import Foundation
 
 // Subjects (publisher) - https://medium.com/bumble-tech/understanding-publishers-in-swiftui-and-combine-27806aa78ba1
 
-// PUBLISHER IN DEPTH
+// MARK:  PUBLISHER IN DEPTH
 
 /// 🔹 What is a Publisher?
 /**
@@ -39,13 +39,19 @@ import Foundation
  🔹 LifeCycle of Publisher -  After either a regular finished event or a failure, the subject will pass no more values. This is due    to the lifecycle of a subject.
  
  🔹 Key Takeaways
-         Publishers emit values and completion events.
-         Just is for one-off values.
-         Future is for async, single-value work.
-         PassthroughSubject is for manual event broadcasting.
-         CurrentValueSubject holds onto the latest value.
-         Deferred creates publishers only when subscribed.
-         Collections can easily become publishers with .publisher.
+     🔘Publishers emit values and completion events.
+     🔘Just is for one-off values.
+     🔘Future is for async, single-value work.
+     🔘PassthroughSubject is for manual event broadcasting.
+     🔘CurrentValueSubject holds onto the latest value.
+     🔘Deferred creates publishers only when subscribed.
+     🔘Collections can easily become publishers with .publisher.
+ 
+ 🔹 Key Takeaways
+     🔘 Subjects are both Publishers and Subscribers.
+     🔘 Use PassthroughSubject for event streams.
+     🔘 Use CurrentValueSubject for state that should be retained and replayed.
+     🔘 They are a great bridge for mixing imperative (manual) code with reactive Combine pipelines.
  */
 
 // 🔹 Common Publishers in Combine

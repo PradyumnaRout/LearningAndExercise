@@ -80,11 +80,11 @@ class UserViewModel {
         // Lazy property for count text
 //        print(self.valueTypeUsersCountText) // "Total users: 5"
         
-        print(self.changeValueUserName)
+        print(self.changeValueUserName)     // Samir
         
         print("------- Reference Types --------")
         
-        print(self.changeRefUser.name)
+        print(self.changeRefUser.name)      // Bob
     }
     
     func addNewOne() {
@@ -97,7 +97,7 @@ class UserViewModel {
         
         
         refTypeUsers.name = "Berlin"
-        print("After addition :: \(self.refTypeUsers.name)")
+        print("After addition :: \(self.changeRefUser.name)")
     }
 }
 

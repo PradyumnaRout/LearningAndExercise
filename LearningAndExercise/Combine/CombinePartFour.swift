@@ -8,7 +8,7 @@
 import Foundation
 import Combine
 
-// 🔹 Operators in Combine ::
+// MARK:  🔹 Operators in Combine ::
 // https://medium.com/@lucaspedrazoli/a-handy-list-of-swift-combine-operators-e7b5d640761c
 /*
  
@@ -378,6 +378,14 @@ class OperatorDrop {
             .prefix(while: { $0 % 5 != 0 })
             .sink(receiveValue: { print($0) })
             .store(in: &cancellable)
+        
+        /**
+         Output -
+             1
+             2
+             3
+             4
+         */
     }
 }
 
