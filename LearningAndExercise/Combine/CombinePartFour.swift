@@ -8,6 +8,25 @@
 import Foundation
 import Combine
 
+
+// MARK: -  COMBINE PUBLISHER, SUBSCRIBERS AND OPERATORS
+// https://medium.com/bumble-tech/understanding-publishers-in-swiftui-and-combine-27806aa78ba1
+// https://medium.com/@lucaspedrazoli/a-handy-list-of-swift-combine-operators-e7b5d640761c (Great)
+//https://nikunj-joshi.medium.com/swift-combine-introduction-to-combine-operators-filtering-operators-510d962b95f2
+
+//https://www.swiftbysundell.com/articles/building-custom-combine-publishers-in-swift/
+// https://thoughtbot.com/blog/lets-build-a-custom-publisher-in-combine
+// https://forums.swift.org/t/combine-creating-a-custom-publisher-by-wrapping-another-publisher-and-operating-on-it/48812
+
+
+/**
+ Merge - Single emmision do not wait for next one
+ 
+ combine latest - single emmision but for the first time wait for two
+ 
+ zip -> pair emmision - always.
+ */
+
 // MARK:  🔹 Operators in Combine ::
 // https://medium.com/@lucaspedrazoli/a-handy-list-of-swift-combine-operators-e7b5d640761c
 /*

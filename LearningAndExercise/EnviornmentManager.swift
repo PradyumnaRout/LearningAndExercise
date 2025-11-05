@@ -5,6 +5,9 @@
 //  Created by hb on 23/10/25.
 //
 
+// https://medium.com/@nehapenkalkar/managing-multiple-environments-in-ios-a-comprehensive-guide-03aaa44a7225
+// https://satvasolutions.com/blog/set-up-ios-environments-using-xcode-schemes-production-sandbox
+// https://medium.com/@tejaswini-27k/ios-project-different-environments-xcode-configurations-and-scheme-752ee4404bfa
 import Foundation
 
 enum AppEnvironment {
