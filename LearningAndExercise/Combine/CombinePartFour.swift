@@ -69,7 +69,7 @@ import Combine
  */
 class OperatorMap {
     
-    struct User {
+    struct UserModel {
         let name: String
         let lastName: String
         let age: String
@@ -78,8 +78,8 @@ class OperatorMap {
     
     var cancellable = Set<AnyCancellable>()
     let number = [1,2,3,4,5].publisher
-    let user = User(name: "Jhon", lastName: "Snow", age: "32", place: "GOT")
-    let publisher = PassthroughSubject<User, Never>()
+    let user = UserModel(name: "Jhon", lastName: "Snow", age: "32", place: "GOT")
+    let publisher = PassthroughSubject<UserModel, Never>()
     
     
     func operate() {

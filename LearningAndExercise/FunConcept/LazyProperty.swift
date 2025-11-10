@@ -7,15 +7,15 @@
 
 import Foundation
 
-class User: Comparable {
+class UserData: Comparable {
     var name: String
     init(name: String) { self.name = name }
     
-    static func ==(lhs: User, rhs: User) -> Bool {
+    static func ==(lhs: UserData, rhs: UserData) -> Bool {
         return lhs.name == rhs.name
     }
     
-    static func < (lhs: User, rhs: User) -> Bool {
+    static func < (lhs: UserData, rhs: UserData) -> Bool {
         return lhs.name < rhs.name
     }
 }
@@ -40,7 +40,7 @@ class UserViewModel {
         "Edward Norton"
     ]
     
-    var refTypeUsers: User = User(name: "Alice")
+    var refTypeUsers: UserData = UserData(name: "Alice")
     var valueTypeUserName: String = "Samir"
     
     // Lazy property: computed only when accessed the first time
@@ -57,7 +57,7 @@ class UserViewModel {
         return valueTypeUserName
     }()
     
-    lazy var changeRefUser: User = {
+    lazy var changeRefUser: UserData = {
         refTypeUsers.name = "Bob"
         return refTypeUsers
     }()

@@ -6,7 +6,14 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		278CDF972EC1A25200DFF375 /* MigrrationMappingModel.xcmappingmodel in Sources */ = {isa = PBXBuildFile; fileRef = 278CDF962EC1A25200DFF375 /* MigrrationMappingModel.xcmappingmodel */; };
+		278CDF9B2EC1A36100DFF375 /* MigrationEntityMigrationPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 278CDF9A2EC1A36100DFF375 /* MigrationEntityMigrationPolicy.swift */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
+		278CDF962EC1A25200DFF375 /* MigrrationMappingModel.xcmappingmodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcmappingmodel; path = MigrrationMappingModel.xcmappingmodel; sourceTree = "<group>"; };
+		278CDF9A2EC1A36100DFF375 /* MigrationEntityMigrationPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MigrationEntityMigrationPolicy.swift; sourceTree = "<group>"; };
 		27FE0CEE2EA2127F00B744DB /* LearningAndExercise.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LearningAndExercise.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -45,6 +52,8 @@
 		27FE0CE52EA2127F00B744DB = {
 			isa = PBXGroup;
 			children = (
+				278CDF9A2EC1A36100DFF375 /* MigrationEntityMigrationPolicy.swift */,
+				278CDF962EC1A25200DFF375 /* MigrrationMappingModel.xcmappingmodel */,
 				27FE0CF02EA2127F00B744DB /* LearningAndExercise */,
 				27FE0CEF2EA2127F00B744DB /* Products */,
 			);
@@ -132,6 +141,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				278CDF972EC1A25200DFF375 /* MigrrationMappingModel.xcmappingmodel in Sources */,
+				278CDF9B2EC1A36100DFF375 /* MigrationEntityMigrationPolicy.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
