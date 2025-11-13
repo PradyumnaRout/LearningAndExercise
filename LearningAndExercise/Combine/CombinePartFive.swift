@@ -115,6 +115,7 @@ class NormalizeError {
     func normalizeWithRetryIf() {
         URLSession.shared.dataTaskPublisher(for: URL(string: "...")!)
             .tryMap { output -> Data in
+                // Transformation That Can Throw tryMap is like map, but allows the closure to throw errors. If an error is thrown, the publisher fails with that error, and the stream completes.
                 // Check the HTTP response
                 guard let response = output.response as? HTTPURLResponse else  {
                     throw URLError(.badServerResponse)

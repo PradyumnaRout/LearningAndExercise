@@ -100,6 +100,12 @@ class AssignSubscriber {
         namePublisher
             .assign(to: \.self.name, on: self)
             .store(in: &cancellable)
+        
+        /* Output - 
+         User name updated to: Alice
+         User name updated to: Bob
+         User name updated to: Charlie
+         */
     }
 }
 

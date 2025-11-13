@@ -20,9 +20,9 @@ import Combine
 
 
 /**
- Merge - Single emmision do not wait for next one
+ Merge - Single emmision (always) do not wait for next one
  
- combine latest - single emmision but for the first time wait for two
+ combine latest - single emmision but for the first time wait for the next
  
  zip -> pair emmision - always.
  */
@@ -35,7 +35,7 @@ import Combine
  
  Operators are methods you apply to the publisher to transform or react to the emitted values.
  
- Think of them like the functions in a data pipelin
+ Think of them like the functions in a data pipeline
  
  ● A map operator can transform values
  ● A filter operator can drop unwanted values.
@@ -104,7 +104,7 @@ class OperatorMap {
 
 /// 🔵 flatMap
 /**
- FlatMap operates by flattening the output from all received publishers into a single publisher. It shares a similarity with Swift’s standard behavior, which flattens nested arrays
+ FlatMap operates by flattening the output from all received publishers into a single publisher. It shares a similarity with Swift’s standard behavior, which flattens nested arrays, It combines the publisher into single publisher, and emits to downstream.
  */
 
 
@@ -144,10 +144,69 @@ class OperatorFlatMap {
             .store(in: &cancellable)
         
     }
+    
+    func flatMapExampleTwo() {
+        let nestedArray = [[1,2,3],[4,5],[6]].publisher
+        
+        nestedArray
+            .flatMap({ value in
+                value.publisher
+            })
+            .sink { value in
+                print(value)
+            }
+            .store(in: &cancellable)
+        
+        /*
+         🧠 How it works
+
+         • The outer publisher emits [1,2,3], [4,5], [6].
+         • .flatMap receives each array and returns a new publisher (array.publisher) that emits its elements.
+         • flatMap merges all of those inner publishers into one flattened stream.
+         • The sink prints each individual number.
+
+         ✅ Output:
+
+         1
+         2
+         3
+         4
+         5
+         6
+         */
+        
+    }
+    
+    func fetchUser(id: Int) -> AnyPublisher<String, Never> {
+        Future { promise in
+            DispatchQueue.global().asyncAfter(deadline: .now() + 0.3) {
+                promise(.success("User \(id)"))
+            }
+        }
+        .eraseToAnyPublisher()
+    }
+
+    func fetch() {
+        let userIDs = [1, 2, 3].publisher
+        
+        let cancellable = userIDs
+            .flatMap { id in
+                self.fetchUser(id: id)
+            }
+            .sink { value in
+                print("Received:", value)
+            }
+        
+        /*
+         Received: User 1
+         Received: User 2
+         Received: User 3
+         */
+    }
 }
 
 
-/// 🔵 flatMap
+/// 🔵 compactMap
 /**
  What if some of your transformations might result in nil values? Instead of working with optionals, you can use compactMap to unwrap them safely and filter out the invalid ones.
  */
@@ -212,7 +271,7 @@ class OperatorScan {
 }
 
 
-/// 🔵 Scan
+/// 🔵 collect
 // It is used to transform invidual values into an array.
 
 class OperatorCollect {
@@ -236,7 +295,14 @@ class OperatorCollect {
         publisher.send(1)
         publisher.send(2)
         publisher.send(3)
+//        publisher.send(4) //[3, 4]
         publisher.send(completion: .finished)
+        
+        /* output -
+         array elements limited by 2: [1, 2]
+         all values as array: [1, 2, 3]
+         array elements limited by 2: [3]
+         */
     }
 }
 
@@ -305,7 +371,7 @@ class OperatorRemoveDuplicate {
 }
 
 
-// 🔵 Ignoring
+// 🔵 IgnoringOutput
 // When you don't care about the values themselves, and only want a completion event, ignoreOutput is your friend.
 
 class OperatorIgonreOutput {
@@ -667,15 +733,15 @@ class OperatorCombineLatest {
     
     func testCombineLatest() {
         // Simple CombineLatest
-        publisher1
-            .combineLatest(publisher2)
-            .combineLatest(publisher3)
-            .combineLatest(publisher4)
-            .combineLatest(publisher5)
-            .sink(receiveCompletion: { completion in
-                print("completion: \(completion)")
-            }, receiveValue: manipulateData(_:))
-            .store(in: &cancellable)
+//        publisher1
+//            .combineLatest(publisher2)
+//            .combineLatest(publisher3)
+//            .combineLatest(publisher4)
+//            .combineLatest(publisher5)
+//            .sink(receiveCompletion: { completion in
+//                print("completion: \(completion)")
+//            }, receiveValue: manipulateData(_:))
+//            .store(in: &cancellable)
         
         // CombineLatest With Transform
         /**
@@ -692,6 +758,7 @@ class OperatorCombineLatest {
                 let (((value1, value2), value3), value4) = combinedTuple
                 return (value1, value2, value3, value4, floatValue)
             }
+        // emits a tuple containing the latest value from every upstream publisher
             .sink(receiveCompletion: { completion in
                 print("Completion: \(completion)")
             }, receiveValue: (manipulateTransferData))
@@ -713,12 +780,12 @@ class OperatorCombineLatest {
             self.publisher5.send(10.0)
         }
         
-        DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 3) {
+        DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 8) {
             // it will wait the last publisher emit a value
             self.publisher2.send("Hello World")
         }
         
-        DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 4) {
+        DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 15) {
             // finish the origin publisher
             self.publisher1.send(completion: .finished)
             self.publisher2.send(completion: .finished)
@@ -726,6 +793,20 @@ class OperatorCombineLatest {
             self.publisher4.send(completion: .finished)
             self.publisher5.send(completion: .finished)
         }
+        
+        /* output -
+         Int Value: 3
+         String Value: c
+         URL Value: www.apple.com
+         Bool Value: true
+         Float Value: 10.0
+         Int Value: 3
+         String Value: Hello World
+         URL Value: www.apple.com
+         Bool Value: true
+         Float Value: 10.0
+         Completion: finished
+         */
 
     }
     
@@ -751,6 +832,12 @@ class OperatorCombineLatest {
             intPublisher.send(10000)
         }
         
+        /* Output -
+         String Value: First String
+         Int Value: 100
+         String Value: First String
+         Int Value: 10000
+         */
     }
     
     func manipulateData(_ value: ((((intVlaue: Int, stringValue: String), urlValue: URL), boolValue: Bool), floatValue: Float)) {
@@ -772,7 +859,7 @@ class OperatorCombineLatest {
 
 // 🔵 Zip
 /**
- It waits for each publisher to emit an item, then emits a tuple. If we are zipping two publishers, we will get a single tuple emitted every time both publishers emit a value.
+ It waits for each publisher to emit an item, then emits a tuple. If we are zipping two publishers, we will get a single tuple emitted every time both publishers emit a value. It can also works with `differnet Types`
  */
 
 class OperatorZip {
@@ -801,6 +888,13 @@ class OperatorZip {
         
         publisher1.send(completion: .finished)
         publisher2.send(completion: .finished)
+        
+        /* Output -
+         P1: 1, P2: a
+         P1: 2, P2: b
+         P1: 3, P2: c
+         Completed
+         */
     }
 }
 

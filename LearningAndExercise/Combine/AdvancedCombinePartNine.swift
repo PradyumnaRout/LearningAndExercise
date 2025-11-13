@@ -168,6 +168,35 @@ class MulticastInCombine {
         
     }
     
+    
+    // MARK: -  Easily Accessable Example of .share()
+    
+    func exampleWithShare() {
+        
+        let defferPub = Deferred {
+            Future<String, Never> { promise in
+                print("Entering into the publisehr")
+                promise(.success("Successfully Fetched data!"))
+            }
+        }.share()
+        
+        
+        // Subscribe with subscriber one
+        defferPub
+            .sink { value in
+                print("Fetched Data: \(value)")
+            }
+            .store(in: &cancellable)
+        
+        // Subscribe with subscriber two
+        defferPub
+            .sink { value in
+                print("Fetched Data: \(value)")
+            }
+            .store(in: &cancellable)
+        
+    }
+    
     func callWithMultiCast() {
         let subject = PassthroughSubject<Data, URLError>()
         

@@ -101,12 +101,13 @@ final class CustomHotPublisher: Publisher {
         // Cretae and send a custom subsciption
         let subscription = CustomHotSubscription(subscriber: subscriber)
         subscriber.receive(subscription: subscription)
+        // Calling through subscription , so it will call the request method of subscription and in that method again receive(_ value: Input) -> Subscribers.Demand will get called.
     }
     
     // Custom send method (manually push values)
     func send(_ post: Post) {
         guard !isCompleted else { return }
-        let _ = self.subscriber?.receive(post)
+        let _ = self.subscriber?.receive(post)          // receive(_ value: Input) -> Subscribers.Demand
     }
     
     // Send a completion event

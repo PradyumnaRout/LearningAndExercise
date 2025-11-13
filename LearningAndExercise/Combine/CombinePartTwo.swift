@@ -75,6 +75,12 @@ class JustPub {
                 receiveValue: { print("Value: \($0)") }
             )
             .store(in: &cancellable)
+        
+        /*
+         Output -
+         Value: Hello, World
+         Completion: finished
+         */
     }
     
     ///Another use case of Just publisher is often employed to initiate another single-run pipeline or to provide a placeholder response as a fallback response when a failure occurs.
@@ -96,13 +102,13 @@ class JustPub {
         temperaturePublisher.sink { temperatureInfo in
             print("City: \(temperatureInfo.city), Temperature: \(temperatureInfo.temperature)")
         }.store(in: &cancellable)
+        
+        /*
+         Output -
+         City: Unknown, Temperature: 72.0
+         */
     }
 }
-/**
- O/P -
- Value: Hello, World!
- Completion: finished
- */
 
 
 /// 2. Future (Future<Output, Failure>)
@@ -180,7 +186,7 @@ class FuturePub {
 // struct Fail<Output, Failure> where Failure: Error
 // https://medium.com/@viveksehrawat36/combine-just-empty-fail-publisher-part-2-1-8dad225c75cc
 
-class FaiPub {
+class FailPub {
     enum ProfileError: Error {
         case invalidRequestError(String)
         case decodingError(Error)
@@ -202,7 +208,7 @@ class FaiPub {
                 if error is DecodingError {
                     return ProfileError.decodingError(error)
                 }
-                return error as! FaiPub.ProfileError
+                return error as! FailPub.ProfileError
             }
             .eraseToAnyPublisher()
     }
@@ -214,14 +220,13 @@ class FaiPub {
 // https://ahmadgsufi.medium.com/mastering-the-power-of-subjects-in-combine-a-comprehensive-guide-434ece579c2e (Must Read)
 // https://medium.com/bumble-tech/understanding-publishers-in-swiftui-and-combine-27806aa78ba1
 
-// PassthroughSubject : “I always know the latest state.”
+// CurrentValueSubject : “I always know the latest state.”
 /**
  A subject that manually send values through.
  Think of it like an event emitter (Similar to NotificationCenter)
  
  - CurrentValueSubject : A subject that holds a current value and emits it to new subscribers immediately upon subscription.
-     As name suggest this publisher emits and stores the current value of a property. Meaning that when a new value is assigned it will
-     be sent to al the subscriber as expected, but it will also be stored so it can be requested later on for immediate use or requested by new subscribers attached after the value was emitted.
+     As name suggest this publisher emits and stores the current value of a property. Meaning that when a new value is assigned it will be sent to all the subscriber as expected, but it will also be stored so it can be requested later on for immediate use or requested by new subscribers attached after the value was emitted.
  
  */
 
@@ -304,6 +309,12 @@ class UploaderCurrValSubject {
         self.startUploading()
         self.failUpload()
 //        self.finishUpload()
+        
+        /* output -
+         Received message: pending
+         Received message: uploading
+         Received error: uploadFailed
+         */
 
     }
 }
@@ -405,6 +416,20 @@ struct DeferredPub {
                 promise(.success("Hello from Deferred"))
             }
         }
+        
+        // ✅ Subscribe here
+        let cancellable = deferredPublisher
+            .sink { value in
+                print("Received value: \(value)")
+            }
+        
+        let future = Future<String, Never> { promise in
+            print("Future started")
+            promise(.success("Hi"))
+        }
+
+//        print("Before subscribing")
+//        future.sink { print("Received:", $0) }
     }
 }
 
@@ -421,5 +446,64 @@ class CollectionPub {
             .store(in: &cancellable)
     }
 }
+// MARK: - Difference between defer and any other publisher
+/*
+ 🧩 The core idea
+
+ ✅ All Combine publishers are lazy — they only start producing values when subscribed to.
+
+ So, at first glance, Deferred seems redundant.
+
+ However, the key difference is when the publisher is created.
+
+ ⚖️ Difference between Future and Deferred<Future>
+ 👉 Future
+
+ A Future runs immediately upon creation, even before any subscriber appears.
+
+ let future = Future<String, Never> { promise in
+     print("Future started")
+     promise(.success("Hi"))
+ }
+
+ print("Before subscribing")
+ future.sink { print("Received:", $0) }
+
+
+ 🧩 Output:
+
+ Future started
+ Before subscribing
+ Received: Hi
+
+
+ 💡 Notice: "Future started" printed before we subscribed!
+
+ That’s because Future executes its closure immediately.
+
+ 👉 Deferred(Future)
+
+ Deferred delays creating the Future until someone subscribes.
+
+ let deferred = Deferred {
+     Future<String, Never> { promise in
+         print("Deferred Future started")
+         promise(.success("Hi"))
+     }
+ }
+
+ print("Before subscribing")
+ deferred.sink { print("Received:", $0) }
+
+
+ 🧩 Output:
+
+ Before subscribing
+ Deferred Future started
+ Received: Hi
+
+
+ 💡 Now, "Deferred Future started" happens only after subscription.
+ */
 
 

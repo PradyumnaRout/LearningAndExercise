@@ -139,7 +139,7 @@ final class StringSubscriber: MySubscriber {
         self.subscription = subscription
         
         if subscription.inputValue.count > 5 {
-            subscription.request(subscription.inputValue)
+            subscription.request(subscription.inputValue)     // Call the request method of subscription.
         }
     }
 

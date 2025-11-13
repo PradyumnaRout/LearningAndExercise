@@ -10,11 +10,12 @@ import SwiftUI
 struct ContentView: View {
     
 //    var sub = UserViewModel()
-    var obj = BasicAsyncStream()
+//    var obj = BasicAsyncStream()
     
     // Custom publisher
 //        let publisher = StringPublisher(inputValue: "hello world")
 //        let subscriber = StringSubscriber()
+    let publisher = PostManager()
 
     
     var body: some View {
@@ -32,7 +33,8 @@ struct ContentView: View {
 //            sub.testLazyProperty()
 //            sub.addNewOne()
             
-            obj.basicExample()
+//            obj.basicExample()
+            publisher.testCustomPublisher()
         }
     }
 }
