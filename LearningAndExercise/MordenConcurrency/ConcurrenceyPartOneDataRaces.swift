@@ -51,7 +51,7 @@
 // https://blog.stackademic.com/mastering-modern-concurrency-in-swift-part-5-actors-protecting-shared-state-27c81fc51f98
 import Foundation
 
-//MARK: - Actor
+//MARK: - Data Races
 
 /*
  An actor in swift is like class, but with one key difference.
