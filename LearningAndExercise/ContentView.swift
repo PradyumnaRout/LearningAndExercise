@@ -15,7 +15,7 @@ struct ContentView: View {
     // Custom publisher
 //        let publisher = StringPublisher(inputValue: "hello world")
 //        let subscriber = StringSubscriber()
-    let publisher = GlobalConcurentQueueExperiment()
+    let publisher = TargetQueueBehaviour()
 
     
     var body: some View {
@@ -34,7 +34,7 @@ struct ContentView: View {
 //            sub.addNewOne()
             
 //            obj.basicExample()
-            publisher.testMultipleQOS()
+            publisher.experiment()
         }
     }
 }
