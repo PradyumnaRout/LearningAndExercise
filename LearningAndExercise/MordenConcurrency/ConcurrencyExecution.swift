@@ -343,3 +343,340 @@ class ConcurrencyExecution {
 
 
 
+// MARK: - DispatchGroup
+// Used to group multiple task together.
+class DispatchGroupExecution {
+    let dispatchGroup = DispatchGroup()
+    let customQueue = DispatchQueue.init(label: "com.concurrent.queue", attributes: .concurrent)
+    
+    func groupWithNotify() {
+        // enter to group
+        dispatchGroup.enter()
+        customQueue.async {
+            if Thread.isMainThread {
+                print("Task 1 :: Running in main thread")
+            } else {
+                print("Task 1 :: Running in other thread")
+            }
+            
+            self.dispatchGroup.leave()
+            print("After leaving the task one")
+        }
+        
+        dispatchGroup.enter()
+        customQueue.async {
+            if Thread.isMainThread {
+                print("Task 2 :: Running in main thread")
+            } else {
+                print("Task 2 :: Running in other thread")
+            }
+            
+            self.dispatchGroup.leave()
+            print("After leaving the task Two")
+        }
+        
+        // it manages enter and leave by itself
+        customQueue.async(group: dispatchGroup) {
+            if Thread.isMainThread {
+                print("Task 3 :: Running in main thread")
+            } else {
+                print("Task 3 :: Running in other thread")
+            }
+
+            sleep(UInt32(arc4random_uniform(4)))
+            print("After finishing task Three")
+        }
+        
+        // Notify when all tasks are completed
+//        dispatchGroup.notify(queue: .main) {
+//            print("All tasks are finished. Display the results here.")
+//        }
+        
+        // Wait for the all the task to complete
+        // This will block the current thread until all tasks are completed
+//        dispatchGroup.wait()
+        
+        let timeoutResult = dispatchGroup.wait(timeout: .now() + 0.2)
+        
+        switch timeoutResult {
+        case .success:
+            print("Success")
+        case .timedOut:
+            print("Time out")
+        }
+        
+        print("It does not block the current thread")
+        
+        /**
+         output on notify -
+         
+         It does not block the current thread
+         Task 3 :: Running in other thread
+         Task 1 :: Running in other thread
+         Task 2 :: Running in other thread
+         After finishing task Three
+         After leaving the task one
+         After leaving the task Two
+         All tasks are finished. Display the results here.
+         
+         // output on wait
+         Task 1 :: Running in other thread
+         Task 2 :: Running in other thread
+         Task 3 :: Running in other thread
+         After leaving the task Two
+         After finishing task Three
+         It does not block the current thread
+         After leaving the task one  - `(This prints last because as you can see in the code, group is left before it. But one thing we can not predict that it always print at last.)`
+         
+         output with distpatch timeout result -
+         Task 2 :: Running in other thread
+         Task 1 :: Running in other thread
+         After leaving the task one
+         After leaving the task Two
+         Task 3 :: Running in other thread
+         Time out
+         It does not block the current thread
+         After finishing task Three
+         
+         
+         The out put will be asynchronous and the last one will execute after the finish of both the task because of the notify and it won't block the current thread because notify itself is asynchronous
+         */
+        
+    }
+}
+
+
+
+// MARK: - Dispatch Work Item.
+
+class DispatchWorkItemExecution {
+    
+    func exampleOne() {
+        let workItem = DispatchWorkItem {
+            print("Work item executing")
+        }
+        
+        let queue = DispatchQueue(label: "com.exampleOne")
+        queue.async(execute: workItem)
+        
+        workItem.cancel()
+        
+        if workItem.isCancelled {
+            print("Work iten has been cancelled.")
+        }
+    }
+    /**
+     Here’s what happens step-by-step:
+
+     🔹 You create a DispatchWorkItem
+     🔹 You enqueue it on a background queue (async)
+     🔹 Immediately after queuing, you call cancel()
+     🔹 Then you check isCancelled
+
+     🔍 Important behavior
+
+     🔹 cancel() does NOT stop the block from executing once it’s already queued.
+     🔹 It only sets an internal flag (isCancelled = true)
+     🔹 The work item still runs unless you explicitly check isCancelled inside the block.
+
+     🧩 Most likely output
+     Work item executing
+     Work iten has been cancelled.
+
+     Why not guaranteed?
+     🔹 Because timing matters. If the queue executed the block before cancellation was set, you could see:
+
+     Work iten has been cancelled.
+     Work item executing
+
+
+     🔹 Or in a very rare timing case—if the program exits too fast—you might see only:
+     Work iten has been cancelled.
+
+     🔹 But in normal conditions on a serial queue, it will almost always execute the work and print both lines.
+     */
+    
+    func exampleTwo() {
+        var workItem: DispatchWorkItem!
+        workItem = DispatchWorkItem {
+//            if workItem.isCancelled { return }
+//            sleep(UInt32(8))
+            print("Work item executing")
+        }
+        
+        let queue = DispatchQueue(label: "com.exampleOne")
+//        queue.async(execute: workItem)
+        queue.asyncAfter(deadline: .now() + 8, execute: workItem)       // it will enter to the workItem block after 8 seconds
+        
+        sleep(UInt32(2))
+        workItem.cancel()       // cancel() does NOT stop the block from executing once it’s already queued.It only sets an internal flag (isCancelled = true)
+        
+        if workItem.isCancelled {
+            print("Work iten has been cancelled.")
+        }
+        
+        // Notify will call no matter your task exectution completes or cancelled
+        workItem.notify(queue: queue) {
+            print("Work item execution done")
+        }
+        
+//        workItem.wait()
+//        print("After wait")
+    }
+    /**
+     Output -
+     Work iten has been cancelled.
+     Work item executing
+     Work item execution done
+     
+     🔷 we will get this output everytime, because we are cancelling task after two section of it started, so     the task is actually not cancelled, only the isCalcelled variable becomes true. Execution in this case    won't stop.
+     
+     But it may varry if you change the sleep or waiting timing  because it all depents on timing.
+     
+     */
+    
+    
+    func exampleThree() {
+        let workItemOne = DispatchWorkItem {
+            for i in 0...5 {
+                print("➡️ Printing:: \(i)")
+            }
+        }
+        
+        let workItemTwo = DispatchWorkItem {
+            for i in 6...10 {
+                print("➡️ Printing:: \(i)")
+            }
+        }
+        
+        let workItemThree = DispatchWorkItem {
+            for i in 11...15 {
+                print("➡️ Printing:: \(i)")
+            }
+        }
+        
+        let queue = DispatchQueue(label: "queue.concorrent", attributes: .concurrent)
+        
+        queue.async(execute: workItemOne)
+        
+        queue.async(execute: workItemTwo)
+        
+        queue.async(execute: workItemThree)
+        
+        workItemOne.notify(queue: queue, execute: {
+            print("Work Item 1️⃣ finished")
+        })
+        
+        workItemTwo.notify(queue: queue, execute: {
+            print("Work Item 2️⃣ finished")
+        })
+        
+        workItemThree.notify(queue: queue, execute: {
+            print("Work Item 3️⃣ finished")
+        })
+        
+        /**
+         
+         Output will be different everytime as we are using concurrent queue.
+         
+         ➡️ Printing:: 6
+         ➡️ Printing:: 7
+         ➡️ Printing:: 8
+         ➡️ Printing:: 9
+         ➡️ Printing:: 10
+         ➡️ Printing:: 0
+         Work Item 2️⃣ finished
+         ➡️ Printing:: 11
+         ➡️ Printing:: 1
+         ➡️ Printing:: 2
+         ➡️ Printing:: 3
+         ➡️ Printing:: 4
+         ➡️ Printing:: 12
+         ➡️ Printing:: 13
+         ➡️ Printing:: 14
+         ➡️ Printing:: 15
+         ➡️ Printing:: 5
+         Work Item 3️⃣ finished
+         Work Item 1️⃣ finished
+         */
+    }
+    
+    
+    func exampleFour() {
+        let workItemOne = DispatchWorkItem {
+            for i in 0...5 {
+                print("➡️ Printing:: \(i)")
+            }
+        }
+        
+        let workItemTwo = DispatchWorkItem {
+            for i in 6...10 {
+                print("➡️ Printing:: \(i)")
+            }
+        }
+        
+        let workItemThree = DispatchWorkItem {
+            for i in 11...15 {
+                print("➡️ Printing:: \(i)")
+            }
+        }
+        
+        let group = DispatchGroup()
+        let queue = DispatchQueue(label: "queue.concurrent", attributes: .concurrent)
+        
+        group.enter()
+        queue.async(execute: workItemOne)
+        group.leave()
+        
+        group.enter()
+        queue.async(execute: workItemTwo)
+        group.leave()
+        
+        group.enter()
+        queue.async(execute: workItemThree)
+        group.leave()
+        
+//        group.notify(queue: queue) {
+//            print("Execution in group finished ✅")
+//        }
+        
+        group.wait()
+        print("Execution in group finished ✅")
+        
+        workItemOne.notify(queue: queue, execute: {
+            print("Work Item 1️⃣ finished")
+        })
+        
+        workItemTwo.notify(queue: queue, execute: {
+            print("Work Item 2️⃣ finished")
+        })
+        
+        workItemThree.notify(queue: queue, execute: {
+            print("Work Item 3️⃣ finished")
+        })
+        
+        /**
+         output -
+         Execution in group finished ✅
+         ➡️ Printing:: 6
+         ➡️ Printing:: 7
+         ➡️ Printing:: 8
+         ➡️ Printing:: 9
+         ➡️ Printing:: 0
+         ➡️ Printing:: 10
+         ➡️ Printing:: 11
+         ➡️ Printing:: 1
+         ➡️ Printing:: 2
+         ➡️ Printing:: 3
+         ➡️ Printing:: 4
+         Work Item 2️⃣ finished
+         ➡️ Printing:: 5
+         ➡️ Printing:: 12
+         Work Item 1️⃣ finished
+         ➡️ Printing:: 13
+         ➡️ Printing:: 14
+         ➡️ Printing:: 15
+         Work Item 3️⃣ finished
+         */
+    }
+}
