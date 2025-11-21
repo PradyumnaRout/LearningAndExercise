@@ -602,11 +602,17 @@ class DispatchWorkItemExecution {
     }
     
     
+    /// Not preferable to use group.enter() and group.leave() with dispatch work item, it will case dead lock if enter do not have correspoding leave.
     func exampleFour() {
+        let group = DispatchGroup()
+        let queue = DispatchQueue(label: "queue.concurrent", attributes: .concurrent)
+
+        
         let workItemOne = DispatchWorkItem {
             for i in 0...5 {
                 print("➡️ Printing:: \(i)")
             }
+            group.leave()
         }
         
         let workItemTwo = DispatchWorkItem {
@@ -621,27 +627,22 @@ class DispatchWorkItemExecution {
             }
         }
         
-        let group = DispatchGroup()
-        let queue = DispatchQueue(label: "queue.concurrent", attributes: .concurrent)
-        
         group.enter()
         queue.async(execute: workItemOne)
-        group.leave()
+        
         
         group.enter()
         queue.async(execute: workItemTwo)
-        group.leave()
         
         group.enter()
         queue.async(execute: workItemThree)
-        group.leave()
         
-//        group.notify(queue: queue) {
-//            print("Execution in group finished ✅")
-//        }
+        group.notify(queue: queue) {
+            print("Execution in group finished ✅")
+        }
         
-        group.wait()
-        print("Execution in group finished ✅")
+//        group.wait()
+//        print("Execution in group finished ✅")
         
         workItemOne.notify(queue: queue, execute: {
             print("Work Item 1️⃣ finished")
@@ -656,7 +657,7 @@ class DispatchWorkItemExecution {
         })
         
         /**
-         output -
+         output - when you use group.leave() after queue.async(execute: workItemThree)
          Execution in group finished ✅
          ➡️ Printing:: 6
          ➡️ Printing:: 7
@@ -677,6 +678,116 @@ class DispatchWorkItemExecution {
          ➡️ Printing:: 14
          ➡️ Printing:: 15
          Work Item 3️⃣ finished
+         
+         output - when you use group.leave() inside workItemBlock
+         
+         // In this case you can notice notify will not call, which cause deadlock, because  enter() calls do not have corresponding leave() calls.
+         ➡️ Printing:: 11
+         ➡️ Printing:: 12
+         ➡️ Printing:: 13
+         ➡️ Printing:: 14
+         ➡️ Printing:: 15
+         Work Item 3️⃣ finished
+         ➡️ Printing:: 0
+         ➡️ Printing:: 1
+         ➡️ Printing:: 2
+         ➡️ Printing:: 3
+         ➡️ Printing:: 4
+         ➡️ Printing:: 5
+         ➡️ Printing:: 6
+         Work Item 1️⃣ finished
+         ➡️ Printing:: 7
+         ➡️ Printing:: 8
+         ➡️ Printing:: 9
+         ➡️ Printing:: 10
+         Work Item 2️⃣ finished
+         
+         
+         
+         🔵 So do not use group.enter() and group.leave() when you use dispatch Group with Dispatch Work Item.
+         */
+    }
+    
+    
+    // MARK: - DispatchGroup with work item. How to use dispatch group with dispatch work item.
+    func dispatchGroupWithWorkItem() {
+        let group = DispatchGroup()
+        
+        let workItem1 = DispatchWorkItem {
+            print("WorkItem 1 running")
+            sleep(1)
+            print("Workitem 1 done")
+        }
+        
+        let workItem2 = DispatchWorkItem {
+            print("WorkItem 2 running")
+            sleep(1)
+            print("Workitem 2 done")
+        }
+        
+        // Assign each work item to the group
+        DispatchQueue.global().async(group: group, execute: workItem1)
+        DispatchQueue.global().async(group: group, execute: workItem2)
+        
+        group.notify(queue: .main) {
+            print("All work items completed.")
+        }
+        
+        /**
+         output -
+         WorkItem 1 running
+         WorkItem 2 running
+         Workitem 1 done
+         Workitem 2 done
+         All work items completed.
+         */
+    }
+    
+    func cancelWorkItemInGroup() {
+        let group = DispatchGroup()
+        var workItem: DispatchWorkItem!
+        
+        workItem = DispatchWorkItem {
+            if Thread.isMainThread {
+                print("Running on main thread")
+            }
+            print("Work Item started")
+            
+            
+            for i in 1...5 {
+                if workItem.isCancelled {
+                    print("WorkItem cancelled at iteration: \(i)")
+                    return
+                }
+                
+                sleep(1)
+                print("Iteration:: \(i)")
+            }
+        }
+        
+        
+        DispatchQueue.global().async(group: group, execute: workItem)
+        
+        // Cancel after two seconds
+        DispatchQueue.global().asyncAfter(deadline: .now() + 2) {
+            workItem.cancel()
+        }
+        
+        group.notify(queue: .main) {
+            print("Group finished (cancelled or not)")
+        }
+        
+        /**
+         Output -
+         Work Item started
+         Iteration:: 1
+         Iteration:: 2
+         Iteration:: 3
+         WorkItem cancelled at iteration: 4
+         Group finished (cancelled or not)
          */
     }
 }
+
+    
+ 

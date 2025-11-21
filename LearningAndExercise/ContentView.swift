@@ -34,7 +34,7 @@ struct ContentView: View {
 //            sub.addNewOne()
             
 //            obj.basicExample()
-            publisher.exampleFour()
+            publisher.cancelWorkItemInGroup()
         }
     }
 }
