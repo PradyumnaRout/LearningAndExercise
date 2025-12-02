@@ -602,7 +602,7 @@ class DispatchWorkItemExecution {
     }
     
     
-    /// Not preferable to use group.enter() and group.leave() with dispatch work item, it will case dead lock if enter do not have correspoding leave.
+    /// Not preferable to use group.enter() and group.leave() with dispatch work item, it will cause dead lock if enter do not have correspoding leave.
     func exampleFour() {
         let group = DispatchGroup()
         let queue = DispatchQueue(label: "queue.concurrent", attributes: .concurrent)
@@ -790,4 +790,111 @@ class DispatchWorkItemExecution {
 }
 
     
- 
+
+// MARK: DISPATCH BARRIER
+class DispatachBarrierExecutions {
+    var amountRemain: Int = 50
+    let items: [Int] = [30, 40]
+    
+    
+    func example() {
+        let customQueue = DispatchQueue.init(label: "concurrent_queue", attributes: .concurrent)
+        
+        for i in 0...5 {
+            customQueue.async {
+                print("value:: \(i)")
+            }
+            
+            /**
+             value:: 0
+             value:: 1
+             value:: 3
+             value:: 2
+             value:: 4
+             value:: 5
+             */
+        }
+        
+        customQueue.async {
+            for i in 0...5 {
+                print("value:: \(i)")
+            }
+            
+            /**
+             value:: 0
+             value:: 1
+             value:: 2
+             value:: 3
+             value:: 4
+             value:: 5
+             */
+        }
+    }
+    
+    func barrierOne() { // barrier blocks the execution not the thread.
+        let customQueue = DispatchQueue.init(label: "concurrent_queue", attributes: .concurrent)
+        
+        for value in self.items {
+//            customQueue.async {
+//                self.execute(value: value)
+//            }
+            
+            customQueue.async(flags: .barrier) { [weak self] in
+                guard let self = self else { return }
+                self.execute(value: value)
+            }
+            
+            // It will execute once the above task completes.
+            customQueue.async {
+                print("async block 2")
+            }
+            
+            customQueue.async {
+                print("async block 3")
+            }
+            
+            // it will execute indepenetly, custom queue will not affect it. the barrier queue can only affect it self.
+            DispatchQueue.global().async {
+                print("This is a global concurrent queue")
+            }
+        }
+    }
+    
+    func execute(value: Int) {
+        if amountRemain > value {
+            print("Value: \(value)")
+            sleep(3)
+            
+            
+            self.amountRemain = self.amountRemain - value
+            print("Remaining amount: \(amountRemain)")
+            /**
+             output - (always)
+             Value: 30
+             Remaining amount: 20
+             */
+            
+            /// Because your barrier only protects the custom queue, but you’re actually updating amountRemain on the main queue, the critical part is not protected. So do not use any other queue than barrier queue for critical part.
+            /*
+            DispatchQueue.main.async { [weak self] in
+                guard let self = self else { return }
+                self.amountRemain = self.amountRemain - value
+                print("Remaining amount: \(amountRemain)")
+                
+                /**
+                 Value: 30
+                 Value: 40
+                 Remaining amount: 20
+                 Remaining amount: -20
+                 */
+            }
+             */
+        }
+    }
+}
+
+
+
+class DispatchSemaphoreExecution {
+    
+}
