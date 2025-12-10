@@ -8,6 +8,8 @@
 import Foundation
 // https://blog.stackademic.com/mastering-modern-concurrency-in-swift-part-7-cancellation-error-handling-523ee97a4e27
 
+// https://dev.to/arshtechpro/structured-and-unstructured-tasks-in-swift-5cgi
+
 // MARK: - Cancellation and Error Handling.
 /**
  ✅ Best Practices
@@ -29,23 +31,149 @@ import Foundation
  • In real-world apps, always cancel stale tasks (search, network, timers).
  */
 
+/**
+ ➡️➡️➡️ Comapring Task.cancel() with dispatchworkItem.cancel() ⬅️⬅️⬅️
+ Task.cancel() in Swift concurrency works very similarly to DispatchWorkItem.cancel()
+
+ • Both: Do not forcibly stop execution.
+ • Only mark the task/work item as cancelled.
+ • Rely on cooperative cancellation, meaning the work must check for cancellation and exit.
+ 
+ So yes:
+ task.cancel() does not stop the task by force — it only sets a cancellation flag (isCancelled = true).
+
+ 🧠 Deeper Explanation: How Swift Task.cancel() Actually Works
+ When you call:
+ task.cancel(), Swift sets an internal flag: Task.isCancelled == true, But the task will keep running until: It explicitly checks Task.isCancelled
+
+ It hits an await point that can throw CancellationError
+ (e.g., Task.sleep, URLSession.shared.data, etc.)
+
+ You call Task.checkCancellation() inside the task. If the task never checks cancellation, it will continue running.
+
+ This is intentional — Swift uses cooperative cancellation, not forced cancellation.
+ 
+ 🧩 Comparison Table
+ 
+ | Feature                             | `Task.cancel()` (Swift Concurrency) | `DispatchWorkItem.cancel()` |
+ | ----------------------------------- | ----------------------------------- | --------------------------- |
+ | Forcibly stops work?                | ❌ No                                | ❌ No                        |
+ | Sets an internal cancellation flag? | ✅ Yes (`Task.isCancelled`)          | ✅ Yes (`isCancelled`)       |
+ | Automatically stops at safe points? | ⚠️ Only if awaited call checks      | ❌ Never                     |
+ | Can throw cancellation error?       | ✅ Yes (e.g., `Task.sleep`)          | ❌ No                        |
+ | Cooperative cancellation required?  | ✅ Yes                               | ✅ Yes                       |
+
+ 
+ 
+ 
+ 
+ Important example
+ 
+ let task = Task {
+     for i in 0...5 {
+         try await Task.sleep(nanoseconds: 1_000_000_000)
+         print("✅ Fetched Item: \(i)")
+     }
+ }
+
+ Task {
+     try await Task.sleep(nanoseconds: 2_000_000_000)
+     print("🛑 Cancelling task...")
+     task.cancel()
+ }
+ 🔍 What happens in real execution
+ Timeline:
+ Time    Action
+ 0s    Task starts, enters loop
+ 1s    prints: Fetched Item: 0
+ 2s    prints: Fetched Item: 1
+ 2s    second task fires, prints "Cancelling task..."
+ 2s    calls task.cancel() → sets isCancelled = true
+ 3s    main task wakes from sleep → Task.sleep checks cancellation!
+
+ ✅ Because Task.sleep is a cancellation point, the next sleep call throws CancellationError.
+
+ ⭐ Important: You are NOT catching the error
+ Your task will crash (terminate immediately) when cancellation happens because there is no do/catch.
+
+ It will not print iteration 2 or anything after.
+
+ 📌 Actual Output
+ The output will be:
+
+ ✅ Fetched Item: 0
+ ✅ Fetched Item: 1
+ 🛑 Cancelling task...
+ Then the main task throws CancellationError during the 3rd sleep and stops without printing anything else.
+
+ ✔️ If you want to see the cancellation clearly
+ You need to catch the error:
+
+ swift
+ Copy code
+ let task = Task {
+     do {
+         for i in 0...5 {
+             try await Task.sleep(nanoseconds: 1_000_000_000)
+             print("✅ Fetched Item: \(i)")
+         }
+     } catch {
+         print("❌ Task cancelled")
+     }
+ }
+ Then the output becomes:
+
+ yaml
+ Copy code
+ ✅ Fetched Item: 0
+ ✅ Fetched Item: 1
+ 🛑 Cancelling task...
+ ❌ Task cancelled
+ ✔️ Final Summary
+ Without error handling → prints:
+ nginx
+ Copy code
+ Fetched 0
+ Fetched 1
+ Cancelling...
+ Then silently stops because of a thrown cancellation error.
+
+ With error handling → prints:
+ arduino
+ Copy code
+ Fetched 0
+ Fetched 1
+ Cancelling...
+ Task cancelled
+ */
 
 struct CancellationAndErrorHandling {
     // 🔹 How Task Cancellation Works in Swift
     // Cancelling a task does not kill it immediately.
     // Instead, tasks check Task.isCancelled and exit themselves.
     func isCancellationCheck() {
-        Task {
+        let task = Task {
             for i in 0...5 {
-                try await Task.sleep(nanoseconds: 1_000_000_000)
-//                try Task.checkCancellation()      // ✅ Throws if cancelled
-                if Task.isCancelled {               // Check for task cancellation.
-                    print("❌ Task was cancelled at iteration \(i)")
-                    return
-                }
+                try await Task.sleep(nanoseconds: 1_000_000_000)        // Task.sleep is a cancellation point, the next sleep call throws CancellationError.
+                
+                //                try Task.checkCancellation()      // ✅ Throws if cancelled
+                
+                
+//                if Task.isCancelled {               // Check for task cancellation.
+//                    print("❌ Task was cancelled at iteration \(i)")
+//                    return
+//                }
                 print("✅ Fetched Item: \(i)")
             }
         }
+        
+        Task {
+            try await Task.sleep(nanoseconds: 2_000_000_000)
+            print("🛑 Cancelling task...")
+            task.cancel()
+        }
+        
+        
         
         /**
          If we call .cancel() on this task after 2 seconds:
@@ -58,7 +186,7 @@ struct CancellationAndErrorHandling {
     //🔹 Using withTaskCancellationHandler
     // Sometimes, task need cleanup code when cancelled (e.g., stop a timer, close a stream, free memory).
     func useWithTaskCancellationHandler() {
-        Task {
+        let task = Task {
             do {
                 try await withTaskCancellationHandler {
                     // 👇 Task body
@@ -75,6 +203,11 @@ struct CancellationAndErrorHandling {
             }
         }
         
+        Task {
+            try await Task.sleep(nanoseconds: 2_000_000_000)
+            print("🛑 Cancelling task...")
+            task.cancel()
+        }
         /**
          If cancelled mid-way:
          ⏳ Tick 1
@@ -123,5 +256,3 @@ struct SearchView: View {
         return query
     }
 }
-
-

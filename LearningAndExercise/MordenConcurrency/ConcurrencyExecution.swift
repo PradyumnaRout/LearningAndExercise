@@ -619,12 +619,14 @@ class DispatchWorkItemExecution {
             for i in 6...10 {
                 print("➡️ Printing:: \(i)")
             }
+            group.leave()
         }
         
         let workItemThree = DispatchWorkItem {
             for i in 11...15 {
                 print("➡️ Printing:: \(i)")
             }
+            group.leave()
         }
         
         group.enter()
@@ -681,7 +683,7 @@ class DispatchWorkItemExecution {
          
          output - when you use group.leave() inside workItemBlock
          
-         // In this case you can notice notify will not call, which cause deadlock, because  enter() calls do not have corresponding leave() calls.
+         
          ➡️ Printing:: 11
          ➡️ Printing:: 12
          ➡️ Printing:: 13
@@ -705,6 +707,9 @@ class DispatchWorkItemExecution {
          
          
          🔵 So do not use group.enter() and group.leave() when you use dispatch Group with Dispatch Work Item.
+         instead you can use "DispatchQueue.global().async(group: group, execute: workItem1)" this method of dispatch queue.
+         
+         Otherwise if you want to handle manually then user .enter and .leave  properly. If you do not use .enter and .leave at all Execution in group finished ✅ will call before the execution is finished because it will consider the whole async block as one task
          */
     }
     
@@ -802,6 +807,7 @@ class DispatachBarrierExecutions {
         
         for i in 0...5 {
             customQueue.async {
+                // Execution Block
                 print("value:: \(i)")
             }
             
@@ -816,6 +822,7 @@ class DispatachBarrierExecutions {
         }
         
         customQueue.async {
+            // Execution block
             for i in 0...5 {
                 print("value:: \(i)")
             }
@@ -839,31 +846,127 @@ class DispatachBarrierExecutions {
 //                self.execute(value: value)
 //            }
             
+            // place the critical part in the barrier only.
             customQueue.async(flags: .barrier) { [weak self] in
                 guard let self = self else { return }
                 self.execute(value: value)
             }
             
-            // It will execute once the above task completes.
-            customQueue.async {
-                print("async block 2")
-            }
-            
-            customQueue.async {
-                print("async block 3")
-            }
-            
-            // it will execute indepenetly, custom queue will not affect it. the barrier queue can only affect it self.
-            DispatchQueue.global().async {
-                print("This is a global concurrent queue")
+//            // It will execute once the above task completes.
+//            customQueue.async {
+//                print("async block 2")
+//            }
+//            
+//            customQueue.async {
+//                print("async block 3")
+//            }
+//            
+//            // it will execute indepenetly, custom queue will not affect it. the barrier queue can only affect it self.
+//            DispatchQueue.global().async {
+//                print("This is a global concurrent queue")
+//            }
+        }
+    }
+    
+    func executeBarrier() {
+        let customQueue = DispatchQueue.init(label: "concurrent_queue", attributes: .concurrent)
+        
+//        for value in self.items {
+//            customQueue.async(flags: .barrier) { [weak self] in
+//                guard let self = self else { return }
+//                self.execute(value: value)
+//            }
+//        }
+        
+        /**
+         1. Multiple async(flags: .barrier) inside the loop
+         for value in self.items {
+             customQueue.async(flags: .barrier) {
+                 self.execute(value: value)
+             }
+         }
+
+         ❗ What actually happens
+
+         You are submitting N separate barrier blocks, one for each item.
+
+         Each barrier block executes one at a time, never concurrently.
+
+         Between each barrier block, no other block (even non-barrier) can run on that queue.
+
+         Essentially:
+
+         barrier(item1)
+         barrier(item2)
+         barrier(item3)
+         ...
+
+         ✔️ Effect:
+
+         Strict serialization across the whole queue
+         → no concurrency at all
+         → runs slower
+         → prevents all other tasks on that queue until all items finish
+         */
+        
+//        customQueue.async {
+//            for i in 0...5 {
+//                print("Value : \(i)")
+//            }
+//        }
+//        
+//        customQueue.async {
+//            for i in 6...10 {
+//                print("Value : \(i)")
+//            }
+//        }
+        
+        customQueue.async(flags: .barrier) { [weak self] in
+            guard let self = self else { return }
+            for value in self.items {
+                self.execute(value: value)
             }
         }
+        
+
+        
+        
+        /**
+         2. Single barrier block wrapping the loop
+         customQueue.async(flags: .barrier) {
+             for value in self.items {
+                 self.execute(value: value)
+             }
+         }
+
+         ❗ What actually happens
+
+         You submit one single barrier block.
+
+         Queue behavior:
+
+         🔵 `All previously submitted non-barrier tasks run concurrently.`
+
+         Then the queue reaches this block → enters exclusive mode
+
+         The entire loop executes in one uninterrupted block, serially.
+
+         After the loop finishes, the queue resumes concurrent behavior.
+
+         ✔️ Effect:
+
+         Only this one block is exclusive.
+
+         Tasks inside the loop are not isolated barriers, they are just simple synchronous statements.
+
+         Faster and cleaner than the first approach.
+         */
     }
     
     func execute(value: Int) {
         if amountRemain > value {
             print("Value: \(value)")
-            sleep(3)
+//            sleep(3)
             
             
             self.amountRemain = self.amountRemain - value
@@ -896,5 +999,387 @@ class DispatachBarrierExecutions {
 
 
 class DispatchSemaphoreExecution {
+    var totalPayBalance: Int = 50
+    var cartItems: [Int] = [30, 40]
+    let semaphore = DispatchSemaphore(value: 1)
+
     
+    func semaphoreExecution() {
+        for items in cartItems {
+            
+            DispatchQueue.global().async { [weak self] in
+                guard let self = self else { return }
+                self.execute(value: items)
+            }
+        }
+        
+//        DispatchQueue.global().async { [weak self] in
+//            guard let self = self else { return }
+//            for item in cartItems {
+//                self.execute(value: item)
+//            }
+//        }
+        
+        // both the block will give same output -
+        /*
+         item value: 30
+         Remaining amout : 20
+         
+         
+         if you change value to 2
+         item value: 30
+         item value: 40
+         Remaining amout : 10
+         Remaining amout : -20
+         */
+    }
+    
+    func execute(value: Int) {
+        semaphore.wait()
+        if totalPayBalance > value {
+            print("item value: \(value)")
+            sleep(3)
+            
+            self.totalPayBalance -= value
+            semaphore.signal()
+            print("Remaining amout : \(totalPayBalance)")
+        }
+    }
+}
+
+
+
+// MARK: - Operation And Operation Queue
+
+
+class ExecutionOfOperationAndOperationQueue {
+    func executeOne() {
+        print("About to begin operation")
+        testOperationOne()
+        print("Operation Executed!")
+    }
+    
+    func testOperationOne() {
+        let blockOperation = BlockOperation {
+            print("First Test")
+            sleep(3)
+        }
+        blockOperation.start()
+    }
+    /**
+     About to begin operation
+     First Test
+     
+     // After 3 sec Operation executed will be print as block operation is synchronous in Manner by default.
+     Operation Executed!
+     */
+    
+    /// We can pass multiple block to block operatoion and they will execute concurrently.
+    func executionTwo() {
+        print("About to begin operation")
+        testOperationTwo()
+        print("Operation Executed!")
+    }
+    
+    func testOperationTwo() {
+        let blockOperation = BlockOperation()
+        
+       // Completion Blcok of an operation only execute when the operation get completed
+        blockOperation.completionBlock = {
+            print("Execution operation block completes!")
+        }
+        
+        blockOperation.addExecutionBlock {
+            print("Is executin on main thread: \(Thread.isMainThread)")
+            print("First Block Executed")
+        }
+        
+        blockOperation.addExecutionBlock {
+            print("Second Block Executed")
+        }
+        
+        blockOperation.addExecutionBlock {
+            print("Third Block Executed")
+        }
+        
+        // Execute on main thread
+//        blockOperation.start()
+        
+        // Execute in BG thread
+        DispatchQueue.global().async {
+            blockOperation.start()
+        }
+    }
+    /**
+     About to begin operation
+     Second Block Executed
+     Third Block Executed
+     Is executin on main thread: true
+     First Block Executed
+     Operation Executed!
+     
+     ➡️ Output will change everytime you run the code and the "Operation Executed!" will only print once the execution of all the blocks will complete, Because it treats all the execution block as one, as they are the part of one blockOperation.
+     
+     This is alos executing in synchronous manner. As a result you can see Operation Executed! prints at last.
+     
+     Here in above execution you can see the execution is happening in main thread because .start() is getting called in main thread, so to call it from background thread, we can wrap the start() function in global thread but the nature of execution will still synchronous.
+     
+     
+     When you call the start() method in BG thread the output will be -
+     
+     About to begin operation
+     Operation Executed! (This prints first because now we are not using main thread for executing operaton.)
+     Second Block Executed
+     Third Block Executed
+     Is executin on main thread: false
+     First Block Executed
+     Execution operation block completes!
+     */
+    
+    
+    // Custom Operation
+    // In execution of an operation first start() method will call and then main() will execute.
+    func executionThree() {
+        let customOpr = CustomOperatino()
+        customOpr.start()
+        print("Custom operatoin executed!")
+    }
+    /**
+     Number ➡️ 0
+     Number ➡️ 1
+     Number ➡️ 2
+     Number ➡️ 3
+     Number ➡️ 4
+     Number ➡️ 5
+     Number ➡️ 6
+     Number ➡️ 7
+     Number ➡️ 8
+     Number ➡️ 9
+     Number ➡️ 10
+     Custom operatoin executed!*/
+    
+    
+    func executeFour() {
+        TestOperationFour()
+        print("Custom Operation Executed!")
+    }
+    
+    // Operation Queue
+    func TestOperationFour() {
+        let operationQueue = OperationQueue()
+        // Operation queue is concurrent in nature.
+        // To make the operatin queue seial
+       // operationQueue.maxConcurrentOperationCount = 1
+        
+        let operation1: BlockOperation = BlockOperation()
+        let operation2: BlockOperation = BlockOperation()
+        
+        operation1.addExecutionBlock {
+//            print("Operation 1 being executed")
+            for i in 1...10 {
+                print(i)
+            }
+        }
+        
+        operation1.completionBlock = {
+            print("Operation 1 executed")
+        }
+        
+        operation2.addExecutionBlock {
+//            print("Operation 2 being executed")
+            for i in 11...20 {
+                print(i)
+            }
+        }
+        
+        operation2.completionBlock = {
+            print("Operation 2 executed")
+        }
+        
+        
+        // Dependency in operation
+        operation2.addDependency(operation1)
+        // Here operation2 should wait till the time operation 1 being executed, Here Operation2 is depend on Operation1
+        // for checking dependecy remove the maximumConcurrent
+        
+        operationQueue.addOperation(operation1)
+        operationQueue.addOperation(operation2)
+    }
+    /**
+     Custom Operation Executed!
+     (This is executing first, that means operation queue execute operation in another thread than main thread.)
+     Operation 1 being executed
+     Operation 1 executed
+     
+     
+     Operation 1 being executed
+     Custom Operation Executed!
+     Operation 1 executed
+     Operation 2 being executed
+     Operation 2 executed
+     
+     
+     Lets check the operations are concurrent
+     
+     Custom Operation Executed!
+     11
+     12
+     13
+     14
+     15
+     16
+     1
+     17
+     2
+     18
+     3
+     4
+     19
+     5
+     20
+     6
+     7
+     8
+     9
+     Operation 2 executed
+     10
+     Operation 1 executed
+     
+     IN case operationQueue.maxConcurrentOperationCount = 1
+     
+     Custom Operation Executed!
+     1
+     2
+     3
+     4
+     5
+     6
+     7
+     8
+     9
+     10
+     Operation 1 executed
+     11
+     12
+     13
+     14
+     15
+     16
+     17
+     18
+     19
+     20
+     Operation 2 executed
+     
+     - In case of dependency -
+     Custom Operation Executed!
+     1
+     2
+     3
+     4
+     5
+     6
+     7
+     8
+     9
+     10
+     11
+     12
+     13
+     14
+     15
+     16
+     17
+     Operation 1 executed
+     18
+     19
+     20
+     Operation 2 executed
+     
+     
+     // Here is a catch that the completion block might not executed at the expected time, it might delay. Bbut the operatio2 will only start when the operation1 finish its execution.
+     // Completion block will executed a slight delay(not every time), but the execution block can start before the completion block.
+     
+     */
+    
+    
+    
+    // Running asynchronous block in an operation queue.
+    func executeFive() {
+        let operationQueue = OperationQueue()
+        
+        let operation1 = BlockOperation(block: printOneToTen)
+        let operation2 = BlockOperation(block: printElevenToTwenty)
+        
+        operation2.addDependency(operation1)
+        operationQueue.addOperation(operation1)
+        operationQueue.addOperation(operation2)
+        
+        print("Custom Operation Executed!")
+    }
+    /**
+     
+     // As you can see this is not following depenedency. This is because if you execute a async job inside an operation, it will assumed to be completed as soon as the finishes, mean while if you are executing something asynchrounsly, like you are executing something else in other thread, or some other task, it will not be considered, so it will dissove the dependecny.
+     
+     // To deal with this problem we shoud state of the operation.
+     
+     // the async block
+     DispatchQueue.global().async {
+         for i in 1...10  {
+             print(i)
+         }
+     }
+     
+     Custom Operation Executed!
+     1
+     11
+     2
+     12
+     3
+     13
+     4
+     14
+     5
+     15
+     6
+     16
+     7
+     17
+     8
+     9
+     18
+     10
+     19
+     20
+     */
+    
+    func printOneToTen() {
+        DispatchQueue.global().async {
+            for i in 1...10  {
+                print(i)
+            }
+        }
+    }
+    
+    func printElevenToTwenty() {
+        DispatchQueue.global().async {
+            for i in 11...20  {
+                print(i)
+            }
+        }
+    }
+}
+
+// MARK: - Custom Operation
+class CustomOperatino: Operation {
+    // This will execute the execution off the main thread, but this is not the right way as Thread is a raw API and we have to manage everyting like memory, etc if we use Thread. ThereFore OperationQueue comes into picture.
+    override func start() {
+        Thread.init(block: main).start()
+    }
+    
+    override func main() {
+        for i in 0...10 {
+            print("Number ➡️ \(i)")
+        }
+    }
 }

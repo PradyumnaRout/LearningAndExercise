@@ -526,3 +526,142 @@ class AsyncLetChildTaks {
          */
     }
 }
+
+
+class TaskGroupExecution {
+    
+    func executionOne() {
+        Task {
+            await withTaskGroup(of: Int.self) {[weak self] group in
+                guard let self = self else { return }
+                for i in [1, 6, 11] {
+                    group.addTask {
+                        self.runLoop(start: i, end: i + 4)
+                    }
+                }
+            }
+        }
+    }
+    
+    func executionTwo() {
+        Task {
+            await withTaskGroup(of: Int.self) {[weak self] group in
+                guard let self = self else { return }
+                group.addTask {
+                    self.runLoop(start: 1, end: 5)
+                }
+                
+                group.addTask {
+                    self.runLoop(start: 6, end: 10)
+                }
+                
+                group.addTask {
+                    self.runLoop(start: 11, end: 15)
+                }
+            }
+        }
+    }
+    
+    // Both execution one and two run concurrently and actual output can't be predicted.
+    
+    func runLoop(start: Int, end: Int) -> Int {
+        for i in start...end {
+            print("☺️ value :: \(i)")
+        }
+        return 0
+    }
+}
+
+
+// structured Task
+class StructuredTaskExectuionAndCancellation {
+    func asyncLetExecution() {
+        let parent = Task {
+            async let value1 = fetchDataOne()
+            async let value2 = fetchDataTwo()
+            
+            do {
+                let (one, two) = await (value1, value2)
+                print("Execution done ✅")
+            } catch {
+                print("Failed with cancellation!")
+            }
+        }
+        
+        parent.cancel()
+    }
+    
+    func fetchDataOne() async {
+        for i in 1...5 {
+            try? await Task.sleep(nanoseconds: 2_000_000_000)
+            print("☺️ value :: \(i)")
+        }
+    }
+    
+    func fetchDataTwo() async {
+        for i in 6...10 {
+            try? await Task.sleep(nanoseconds: 2_000_000_000)
+            print("☺️ value :: \(i)")
+        }
+    }
+}
+
+
+
+class StructuredTaskExecutionAndCancellation {
+    func asyncLetExecution_immediateCancel() {
+        let parent = Task {
+            async let value1 = try fetchDataOne()
+            async let value2 = try fetchDataTwo()
+            
+            do {
+                // `try await` so errors (including CancellationError) propagate
+                let (_ , _) = try await (value1, value2)
+                print("Execution done ✅")
+            } catch {
+                print("Parent caught:", error)
+            }
+        }
+        
+        // Request cancellation of the parent (and its structured children)
+        parent.cancel()
+    }
+    
+    func asyncLetExecution_cancelAfterDelay() async {
+        let parent = Task {
+            async let value1 = try fetchDataOne()
+            async let value2 = try fetchDataTwo()
+            
+            do {
+                let (_ , _) = try await (value1, value2)
+                print("Execution done ✅")
+            } catch {
+                print("Parent caught:", error)
+            }
+        }
+        
+        // Wait a bit, then cancel so you can see some child output first
+        try? await Task.sleep(nanoseconds: 3_000_000_000)
+        parent.cancel()
+    }
+    
+    // Make these `async throws` and check cancellation cooperatively
+    func fetchDataOne() async throws {
+        for i in 1...5 {
+            try Task.checkCancellation()                // immediate throw if cancelled
+            try await Task.sleep(nanoseconds: 2_000_000_000) // suspension point — throws on cancel
+            print("☺️ fetchDataOne :: \(i)")
+        }
+    }
+    
+    func fetchDataTwo() async throws {
+        for i in 6...10 {
+            try Task.checkCancellation()
+            try await Task.sleep(nanoseconds: 2_000_000_000)
+            print("☺️ fetchDataTwo :: \(i)")
+        }
+    }
+}
+
+
+/// ✅ without using .sleep, .yeild, task.cancel(), Task.checkCancellation() and withTaskCancellationHandler we can not cancel any task, no matter child or parent, because swift does not support forcefully cancellation, you have to manage it  manually.
