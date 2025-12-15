@@ -1368,6 +1368,74 @@ class ExecutionOfOperationAndOperationQueue {
             }
         }
     }
+    
+    func executeAsyncOperation() {
+        let operationQueue = OperationQueue()
+        
+        let operation1 = PrintNumberOperation(range:Range( 0 ... 25))
+        let operation2 = PrintNumberOperation(range: Range(26 ... 50))
+        
+        operation2.addDependency(operation1)
+        operationQueue.addOperation(operation1)
+        operationQueue.addOperation(operation2)
+        
+        print("Custom Operation Executed!")
+        
+        /**
+         Custom Operation Executed!
+         0
+         1
+         2
+         3
+         4
+         5
+         6
+         7
+         8
+         9
+         10
+         11
+         12
+         13
+         14
+         15
+         16
+         17
+         18
+         19
+         20
+         21
+         22
+         23
+         24
+         25
+         26
+         27
+         28
+         29
+         30
+         31
+         32
+         33
+         34
+         35
+         36
+         37
+         38
+         39
+         40
+         41
+         42
+         43
+         44
+         45
+         46
+         47
+         48
+         49
+         50
+         */
+    }
 }
 
 // MARK: - Custom Operation
@@ -1380,6 +1448,67 @@ class CustomOperatino: Operation {
     override func main() {
         for i in 0...10 {
             print("Number ➡️ \(i)")
+        }
+    }
+}
+
+
+// MARK: States of Opearation
+class AsyncOperation: Operation {
+    enum State: String {
+        case isReady
+        case isExecuting
+        case isFinished
+    }
+    
+    var state: State = .isReady {
+        willSet(newValue) {
+            willChangeValue(forKey: state.rawValue)
+            willChangeValue(forKey: newValue.rawValue)
+        }
+        
+        didSet {
+            didChangeValue(forKey: oldValue.rawValue)
+            didChangeValue(forKey: state.rawValue)
+        }
+    }
+    
+    override var isAsynchronous: Bool { true }
+    override var isExecuting: Bool { state == .isExecuting }
+    override var isFinished: Bool {
+        if isCancelled && state != .isExecuting { return true }
+        return state == .isFinished
+    }
+    
+    override func start() {
+        guard !isCancelled else {
+            state = .isFinished
+            return
+        }
+        state = .isExecuting
+        main()
+    }
+    
+    override func cancel() {
+        state = .isFinished
+    }
+}
+
+
+class PrintNumberOperation: AsyncOperation {
+    var range: Range<Int>
+    
+    init(range: Range<Int>) {
+        self.range = range
+    }
+    
+    override func main() {
+        DispatchQueue.global().async { [weak self] in
+            guard let self: PrintNumberOperation = self else { return }
+            for i in self.range {
+                print(i)
+            }
+            self.state = .isFinished
         }
     }
 }

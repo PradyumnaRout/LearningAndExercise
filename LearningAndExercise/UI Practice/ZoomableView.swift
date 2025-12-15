@@ -402,3 +402,467 @@ struct HorizontalImagePager_Previews: PreviewProvider {
         ])
     }
 }
+
+
+
+
+
+// MARK: - GALLERY PAGER
+
+import SwiftUI
+
+struct HorizontalScrollOffsetPreferenceKey: PreferenceKey {
+    static var defaultValue: CGFloat = 0
+    static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+        value = nextValue()
+    }
+}
+
+struct GalleryPager: View {
+
+    let links = [
+        "https://picsum.photos/id/237/900/600",
+        "https://picsum.photos/id/236/900/700",
+        "https://picsum.photos/id/247/900/1200",
+        "https://picsum.photos/id/249/900/800"
+    ]
+
+    @State private var images: [String: UIImage] = [:]
+    @State private var offset: CGFloat = 0
+    @State private var currentPage: Int = 0
+    @State private var lastPage: Int = 0
+    @State private var lastOffset: CGFloat = 0
+    @State private var scrollTimer: Timer?
+    @State private var targetPage: Int = 0
+    @State private var shouldSnap: Bool = false
+    @State private var offsetCheckCount: Int = 0
+    @State private var lastScrollVelocity: CGFloat = 0
+
+    var screenWidth: CGFloat { UIScreen.main.bounds.width }
+    let velocityThreshold: CGFloat = 100 // Adjust this to control sensitivity
+
+    var body: some View {
+        ScrollViewReader { proxy in
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 0) {
+                    ForEach(0..<links.count, id: \.self) { index in
+                        let link = links[index]
+                        ZStack {
+                            if let img = images[link] {
+                                Image(uiImage: img)
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: screenWidth)
+                            } else {
+                                ProgressView()
+                                    .frame(width: screenWidth, height: 200)
+                            }
+                        }
+                        .id(index)
+                        .task {
+                            if images[link] == nil {
+                                do {
+                                    images[link] = try await loadImage(link)
+                                } catch {
+                                    print("Error loading \(link):", error)
+                                }
+                            }
+                        }
+                    }
+                }
+                .overlay(
+                    GeometryReader { geo in
+                        Color.clear
+                            .preference(
+                                key: HorizontalScrollOffsetPreferenceKey.self,
+                                value: -geo.frame(in: .named("H_scroll")).minX
+                            )
+                    }
+                )
+            }
+            .coordinateSpace(name: "H_scroll")
+            .onPreferenceChange(HorizontalScrollOffsetPreferenceKey.self) { value in
+                offset = value
+
+                // Reset timer when scrolling
+                scrollTimer?.invalidate()
+                scrollTimer = nil
+
+                // Start a new timer to detect when scrolling stops
+                scrollTimer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: false) { _ in
+                    // If offset hasn't changed, user has stopped scrolling
+                    if abs(value - lastOffset) < 1 {
+                        let closestPage = Int(round(value / screenWidth))
+                        targetPage = max(0, min(closestPage, links.count - 1))
+                        shouldSnap = true
+                    }
+                }
+
+                lastOffset = value
+
+                print("Offset: \(value), Page: \(currentPage)")
+            }
+            .onChange(of: shouldSnap) { newValue in
+                if newValue {
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        proxy.scrollTo(targetPage, anchor: .leading)
+                    }
+                    shouldSnap = false
+                }
+            }
+            .onDisappear {
+                scrollTimer?.invalidate()
+            }
+        }
+        .overlay(content: {
+            VStack(spacing: 12) {
+                Text("Page: \(currentPage)")
+                    .font(.title2)
+                    .fontWeight(.bold)
+
+                Text("Offset: \(Int(offset))")
+                    .font(.caption)
+
+                Text("\(currentPage + 1) of \(links.count)")
+                    .font(.caption)
+                    .foregroundColor(.gray)
+            }
+            .padding(12)
+            .background(.thinMaterial)
+            .cornerRadius(8)
+            .frame(maxHeight: .infinity, alignment: .top)
+            .padding()
+        })
+        .scrollIndicators(.hidden)
+    }
+
+    private func loadImage(_ urlString: String) async throws -> UIImage {
+        guard let url = URL(string: urlString) else { throw URLError(.badURL) }
+        let (data, _) = try await URLSession.shared.data(from: url)
+        guard let image = UIImage(data: data) else { throw URLError(.cannotDecodeRawData) }
+        return image
+    }
+}
+
+#Preview("Gallery", body: {
+    GalleryPager()
+//    DemoScrollViewOffsetView()
+})
+    
+
+
+
+/**
+ Will only work on item in horizontal scrolling
+    .background(
+        GeometryReader { geo in
+            Color.clear
+                .preference(
+                    key: HorizontalScrollOffsetPreferenceKey.self,
+                    value: geo.frame(in: .named("H_scroll")).minX
+                )
+        }
+    )
+ */
+
+
+struct DemoScrollViewOffsetView: View {
+    @State private var offset = CGFloat.zero
+    var body: some View {
+        ScrollView {
+            VStack {
+                ForEach(0..<100) { i in
+                    Text("Item \(i)").padding()
+                }
+            }.background(GeometryReader {
+                Color.clear.preference(key: ViewOffsetKey.self,
+                    value: -$0.frame(in: .named("scroll")).origin.y)
+            })
+            .onPreferenceChange(ViewOffsetKey.self) { print("offset >> \($0)") }
+        }.coordinateSpace(name: "scroll")
+    }
+}
+
+struct ViewOffsetKey: PreferenceKey {
+    typealias Value = CGFloat
+    static var defaultValue = CGFloat.zero
+    static func reduce(value: inout Value, nextValue: () -> Value) {
+        value += nextValue()
+    }
+}
+
+
+// MARK: EXAMPLE ONE
+/**
+struct GalleryPager: View {
+    
+    let links = [
+        "https://picsum.photos/id/237/900/600",
+        "https://picsum.photos/id/238/900/700",
+        "https://picsum.photos/id/240/900/1200",
+        "https://picsum.photos/id/249/900/800"
+    ]
+    
+    @State private var images: [String: UIImage] = [:]
+    @State private var offset: CGFloat = 0
+    @State private var currentPage: Int = 0
+    @State private var lastPage: Int = 0
+    @State private var lastOffset: CGFloat = 0
+    @State private var scrollTimer: Timer?
+    @State private var targetPage: Int = 0
+    @State private var shouldSnap: Bool = false
+    @State private var offsetCheckCount: Int = 0
+    
+    var screenWidth: CGFloat { UIScreen.main.bounds.width }
+    
+    var body: some View {
+        ScrollViewReader { proxy in
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 0) {
+                    ForEach(0..<links.count, id: \.self) { index in
+                        let link = links[index]
+                        ZStack {
+                            if let img = images[link] {
+                                Image(uiImage: img)
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: screenWidth)
+                            } else {
+                                ProgressView()
+                                    .frame(width: screenWidth, height: 200)
+                            }
+                        }
+                        .id(index)
+                        .task {
+                            if images[link] == nil {
+                                do {
+                                    images[link] = try await loadImage(link)
+                                } catch {
+                                    print("Error loading \(link):", error)
+                                }
+                            }
+                        }
+                    }
+                }
+                .overlay(
+                    GeometryReader { geo in
+                        Color.clear
+                            .preference(
+                                key: HorizontalScrollOffsetPreferenceKey.self,
+                                value: -geo.frame(in: .named("H_scroll")).minX
+                            )
+                    }
+                )
+            }
+            .coordinateSpace(name: "H_scroll")
+            .onPreferenceChange(HorizontalScrollOffsetPreferenceKey.self) { value in
+                offset = value
+                
+                // Reset timer when scrolling
+                scrollTimer?.invalidate()
+                scrollTimer = nil
+                
+                // Start a new timer to detect when scrolling stops
+                scrollTimer = Timer.scheduledTimer(withTimeInterval: 0.05, repeats: false) { _ in
+                    // If offset hasn't changed, user has stopped scrolling
+                    if abs(value - lastOffset) < 1 {
+                        let closestPage = Int(round(value / screenWidth))
+                        targetPage = max(0, min(closestPage, links.count - 1))
+                        shouldSnap = true
+                    }
+                }
+                
+                lastOffset = value
+                
+                print("Offset: \(value), Page: \(currentPage)")
+            }
+            .onChange(of: shouldSnap) { newValue in
+                if newValue {
+                    withAnimation(.easeInOut(duration: 0.3)) {
+                        proxy.scrollTo(targetPage, anchor: .leading)
+                    }
+                    shouldSnap = false
+                }
+            }
+            .onDisappear {
+                scrollTimer?.invalidate()
+            }
+        }
+        .overlay(content: {
+            VStack(spacing: 12) {
+                Text("Page: \(currentPage)")
+                    .font(.title2)
+                    .fontWeight(.bold)
+                
+                Text("Offset: \(Int(offset))")
+                    .font(.caption)
+                
+                Text("\(currentPage + 1) of \(links.count)")
+                    .font(.caption)
+                    .foregroundColor(.gray)
+            }
+            .padding(12)
+            .background(.thinMaterial)
+            .cornerRadius(8)
+            .frame(maxHeight: .infinity, alignment: .top)
+            .padding()
+        })
+        .scrollIndicators(.hidden)
+    }
+    
+    private func loadImage(_ urlString: String) async throws -> UIImage {
+        guard let url = URL(string: urlString) else { throw URLError(.badURL) }
+        let (data, _) = try await URLSession.shared.data(from: url)
+        guard let image = UIImage(data: data) else { throw URLError(.cannotDecodeRawData) }
+        return image
+    }
+}
+
+func loadImage(_ urlString: String) async throws -> UIImage {
+    guard let url = URL(string: urlString) else { throw URLError(.badURL) }
+    let (data, _) = try await URLSession.shared.data(from: url)
+    guard let image = UIImage(data: data) else {
+        throw URLError(.cannotDecodeContentData)
+    }
+    return image
+}
+
+ */
+ 
+
+
+
+//MARK: -  For ios 18
+/**
+ import SwiftUI
+
+ struct HorizontalScrollOffsetPreferenceKey: PreferenceKey {
+     static var defaultValue: CGFloat = 0
+     static func reduce(value: inout CGFloat, nextValue: () -> CGFloat) {
+         value = nextValue()
+     }
+ }
+
+ struct GalleryPager: View {
+     
+     let links = [
+         "https://picsum.photos/id/237/900/600",
+         "https://picsum.photos/id/238/900/700",
+         "https://picsum.photos/id/240/900/1200",
+         "https://picsum.photos/id/249/900/800"
+     ]
+     
+     @State private var images: [String: UIImage] = [:]
+     @State private var offset: CGFloat = 0
+     @State private var currentPage: Int = 0
+     @State private var lastPage: Int = 0
+     @State private var isScrolling: Bool = false
+     @State private var lastOffset: CGFloat = 0
+     
+     var screenWidth: CGFloat { UIScreen.main.bounds.width }
+     
+     var body: some View {
+         ScrollViewReader { proxy in
+             ScrollView(.horizontal, showsIndicators: false) {
+                 HStack(spacing: 0) {
+                     ForEach(0..<links.count, id: \.self) { index in
+                         let link = links[index]
+                         ZStack {
+                             if let img = images[link] {
+                                 Image(uiImage: img)
+                                     .resizable()
+                                     .scaledToFit()
+                                     .frame(width: screenWidth)
+                             } else {
+                                 ProgressView()
+                                     .frame(width: screenWidth, height: 200)
+                             }
+                         }
+                         .id(index)
+                         .task {
+                             if images[link] == nil {
+                                 do {
+                                     images[link] = try await loadImage(link)
+                                 } catch {
+                                     print("Error loading \(link):", error)
+                                 }
+                             }
+                         }
+                     }
+                 }
+                 .overlay(
+                     GeometryReader { geo in
+                         Color.clear
+                             .preference(
+                                 key: HorizontalScrollOffsetPreferenceKey.self,
+                                 value: -geo.frame(in: .named("H_scroll")).minX
+                             )
+                     }
+                 )
+             }
+             .coordinateSpace(name: "H_scroll")
+             .onPreferenceChange(HorizontalScrollOffsetPreferenceKey.self) { value in
+                 offset = value
+                 lastOffset = value
+                 
+                 // Calculate which page we're closest to
+                 let calculatedPage = Int(round(value / screenWidth))
+                 
+                 // Check if page changed
+                 if calculatedPage != currentPage {
+                     currentPage = calculatedPage
+                     lastPage = currentPage
+                     isScrolling = false
+                 } else {
+                     isScrolling = true
+                 }
+                 
+                 print("Offset: \(value), Page: \(currentPage), Scrolling: \(isScrolling)")
+             }
+             .onScrollPhaseChange { oldPhase, newPhase in
+                 // When user stops scrolling
+                 if oldPhase.isActive && !newPhase.isActive {
+                     // Calculate which page offset is closest to
+                     let closestPage = Int(round(offset / screenWidth))
+                     
+                     // Clamp to valid range
+                     let targetPage = max(0, min(closestPage, links.count - 1))
+                     
+                     // Snap to closest page with animation
+                     withAnimation(.easeInOut(duration: 0.3)) {
+                         proxy.scrollTo(targetPage, anchor: .leading)
+                     }
+                 }
+             }
+         }
+         .overlay(content: {
+             VStack(spacing: 12) {
+                 Text("Page: \(currentPage)")
+                     .font(.title2)
+                     .fontWeight(.bold)
+                 
+                 Text("Offset: \(Int(offset))")
+                     .font(.caption)
+                 
+                 Text("\(currentPage + 1) of \(links.count)")
+                     .font(.caption)
+                     .foregroundColor(.gray)
+             }
+             .padding(12)
+             .background(.thinMaterial)
+             .cornerRadius(8)
+             .frame(maxHeight: .infinity, alignment: .top)
+             .padding()
+         })
+         .scrollIndicators(.hidden)
+     }
+     
+     private func loadImage(_ urlString: String) async throws -> UIImage {
+         guard let url = URL(string: urlString) else { throw URLError(.badURL) }
+         let (data, _) = try await URLSession.shared.data(from: url)
+         guard let image = UIImage(data: data) else { throw URLError(.cannotDecodeRawData) }
+         return image
+     }
+ }
+ */
+

@@ -179,3 +179,149 @@ struct Stack<Element> {
         items.removeLast()
     }
 }
+
+
+/**
+ ✅✅✅ Type Constraints in Generic ✅✅✅
+ 
+ Generic code normally works with any type, but sometimes we need to ensure the type.
+ • Inherit form a specific class
+ • Or conforms to a protocol (e.g, Hashable, Equatable)
+ 
+ Example: Dictionary key type must be Hashable, because a dictionary needs to know
+ • If a key already exists
+ • Where to store the key/value pair
+ • How to retrive values
+ 
+ To do this efficiently, the key type must be able to compute a unique hash value.
+ All basic types like Int, String, Double, Bool are Hashable by default.
+ 
+ You can create your own constraints when creating a generic function or type, you can require
+ • The type conforms to a protocol
+ • Or inherits from a specific class.
+ 
+ 
+ 🌟 2. Type Constraint Syntax
+ func someFunction<T: SomeClass, U: SomeProtocol>(someT: T, someU: U) {
+    // Body
+ }
+ 
+ T must be subclass of SomeClass
+ U must be conforms to SomeProtocol
+ 
+ 
+ 🌟 3. Type Constraints in Action
+ 
+ func findIndex<T>(of valueToFind: T, in array: [T]) -> Int? {
+     for (index, value) in array.enumerated() {
+         if value == valueToFind {
+             return index
+         }
+     }
+     return nil
+ }
+ 
+ This will fail, because
+ • Not every type support ==
+ • Swift cannot assume equality exist for every possible T.
+ • Your custom class may not have equality defined.
+ • Thus the code cannot compile.
+ 
+ 
+ 🌟 4. Fixing it with the Equatable constraint
+ • Swift has a protocol called Equatable
+ • provides == and !=
+ • Required for comparing values
+ • To use ==, we must ensure that T is Equatable.
+ 
+ So correct generic version
+ func findIndex<T: Equatable>(of valueToFind: T, in array: [T]) -> Int? {
+     for (index, value) in array.enumerated() {
+         if value == valueToFind {
+             return index
+         }
+     }
+     return nil
+ }
+ Now this function works with any Equatable type.
+ 
+ */
+
+// 🌟 3. Type Constraints in Action
+
+func findIndex<T: Equatable>(of valueToFind: T, in array: [T]) -> Int? {
+    for (index, value) in array.enumerated() {
+        if value == valueToFind {
+            return index
+        }
+    }
+    return nil
+}
+
+// Error without constraint : Binary operator '==' cannot be applied to two 'T' operands
+
+
+/**
+ ✅✅✅ Extensions Can Add Constraints ✅✅✅
+ 
+ • Just like generic functions and types can have constraints, extensions can also specify requirements. You can use constraint in extension to say
+ 
+ ➡️ Only add this feature when the generic type meets a certail condition.
+ 
+ Syntax:
+ extension SomeType where T: SomeProtocol {
+    // new functionality here
+ }
+ 
+ ✅ Here, the extension only applies when the type parameter T conforms to a protocol.
+ 
+ 
+ // Example
+ struct CustomStack<Element> {
+     var items = [Element]()
+     mutating func push(_ item: Element) { items.append(item) }
+     mutating func pop(_ item: Element) { items.removeLast() }
+ }
+
+ // Now we add functionality only when element is Equatable:
+ extension CustomStack where Element: Equatable {
+     func isTop(_ item: Element) -> Bool {
+         return items.last == item
+     }
+ }
+
+ 
+ ✅ What does this mean?
+ • isTop(_:) will only be available if the stack stores Equatable elemets
+ • This avoids forcing all stack types to support equality.
+ 
+ 
+ Usage Example
+ Valid: Stack of Strings (String is Equatable)
+
+ var stringStack = Stack<String>()
+ stringStack.push("A")
+ print(stringStack.isTop("A"))  // true
+ 
+ Why is this useful?
+ It allows:
+
+• Adding methods only when logically valid
+• Better type safety
+• Cleaner code
+• No unnecessary restrictions on the generic type
+ */
+
+// Example
+struct CustomStack<Element> {
+    var items = [Element]()
+    mutating func push(_ item: Element) { items.append(item) }
+    mutating func pop(_ item: Element) { items.removeLast() }
+}
+
+// Now we add functionality only when element is Equatable:
+extension CustomStack where Element: Equatable {
+    func isTop(_ item: Element) -> Bool {
+        return items.last == item
+    }
+}
