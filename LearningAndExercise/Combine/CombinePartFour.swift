@@ -717,7 +717,7 @@ class OperatorMerge {
  
  This operator allows us to combine publishers of different value types by emitting tuple with the latest values of all publisher. Every publisher passed to combineLatest, including the origin publisher,
  📕 Must emit at least one value to fire the downstream. Additionally,
- 📕 For the first time, it waits for all publishers to emit a value. Once that happens, it emits a new value every time any one of the publishers emits.
+ 📕 For the first time, it waits for all publishers to emit a value. Once that happens, it emits a new value every time either one of the publishers emits.
  📝 To finish the origin publisher subscription, every publisher passed to combineLatest must complete.
  */
 
@@ -811,8 +811,8 @@ class OperatorCombineLatest {
     }
     
     func testCombineLatestWith2() {
-        let stringPublisher = PassthroughSubject<String, Never>()
-        let intPublisher = PassthroughSubject<Int, Never>()
+        let stringPublisher = PassthroughSubject<String, NetworkError>()
+        let intPublisher = PassthroughSubject<Int, NetworkError>()
         
         stringPublisher
             .combineLatest(intPublisher)
@@ -827,6 +827,23 @@ class OperatorCombineLatest {
         stringPublisher.send("First String")
         intPublisher.send(100)
         
+//        intPublisher.send(completion: .failure(.badURL))
+        /**
+         Output -
+         String Value: First String
+         Int Value: 100
+         Completion: failure(LearningAndExercise.NetworkError.badURL)
+         
+         ➡️ Yes. Once either publisher fails, combineLatest stops permanently.
+         
+         3️⃣ intPublisher.send(completion: .failure(.badURL))
+         → Failure is immediately propagated
+         → combineLatest sends .failure
+         → The combined publisher terminates
+
+         4️⃣ Any later sends (like intPublisher.send(10000))
+         → ❌ Ignored (the pipeline is already dead)
+         */
         
         DispatchQueue.main.asyncAfter(deadline: DispatchTime.now() + 3) {
             intPublisher.send(10000)
@@ -894,6 +911,46 @@ class OperatorZip {
          P1: 2, P2: b
          P1: 3, P2: c
          Completed
+         */
+    }
+    
+    func zipWithFailure() {
+        // zip requires both publishers to have the same Failure type. if not then it will show error nstance method 'zip' requires the types 'NetworkError' and 'Never' be equivalent
+        let firstPublisher = PassthroughSubject<String, NetworkError>()
+        let secondPublisher = PassthroughSubject<String, NetworkError>()
+        
+        firstPublisher
+            .zip(secondPublisher)
+            .sink { status in
+                switch status {
+                case .finished:
+                    print("Task Finished")
+                case .failure(let error):
+                    print("Error occured: \(error.localizedDescription)")
+                }
+            } receiveValue: { (value1, value2) in
+                print("Value1: \(value1), and Value2: \(value2)")
+            }
+            .store(in: &subscriptions)
+
+        firstPublisher.send("Hello")
+        firstPublisher.send("How you doing")
+        secondPublisher.send("Guys")
+        secondPublisher.send("Any problem")
+        firstPublisher.send("100")
+        secondPublisher.send(completion: .failure(.badURL))
+        
+        
+        /**
+         Output -
+         Value1: Hello, and Value2: Guys
+         Value1: How you doing, and Value2: Any problem
+         Error occured: The URL provided was invalid.
+         
+         
+         ➡️ Zip will publish value when both the publisher publishes, if one of them will not published then it will stop publishing, similarly if one of them fails then also it stop working.
+         
+         It will only publish when all the publisher inside zip will publish evenly.
          */
     }
 }

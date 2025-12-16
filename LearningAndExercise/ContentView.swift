@@ -15,7 +15,7 @@ struct ContentView: View {
     // Custom publisher
 //        let publisher = StringPublisher(inputValue: "hello world")
 //        let subscriber = StringSubscriber()
-    let publisher = ExecutionOfOperationAndOperationQueue()
+    let publisher = OperatorCombineLatest()
 
     
     var body: some View {
@@ -34,7 +34,7 @@ struct ContentView: View {
 //            sub.addNewOne()
             
 //            obj.basicExample()
-            publisher.executeAsyncOperation()
+            publisher.testCombineLatestWith2()
         }
     }
 }

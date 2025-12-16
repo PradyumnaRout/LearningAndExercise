@@ -11,8 +11,8 @@
 
 import Foundation
 
+// MARK: ✅✅✅`Generics in swift`✅✅✅
 /**
- ✅✅✅`Generics in swift`✅✅✅
  
  • Generics allow you to write flexible, reusable, and type-safe code without repeating the same logic for different data types.
  
@@ -180,9 +180,8 @@ struct Stack<Element> {
     }
 }
 
-
+// MARK:  ✅✅✅ Type Constraints in Generic ✅✅✅
 /**
- ✅✅✅ Type Constraints in Generic ✅✅✅
  
  Generic code normally works with any type, but sometimes we need to ensure the type.
  • Inherit form a specific class
@@ -260,9 +259,8 @@ func findIndex<T: Equatable>(of valueToFind: T, in array: [T]) -> Int? {
 
 // Error without constraint : Binary operator '==' cannot be applied to two 'T' operands
 
-
+// MARK:  ✅✅✅ Extensions Can Add Constraints ✅✅✅
 /**
- ✅✅✅ Extensions Can Add Constraints ✅✅✅
  
  • Just like generic functions and types can have constraints, extensions can also specify requirements. You can use constraint in extension to say
  
@@ -325,3 +323,227 @@ extension CustomStack where Element: Equatable {
         return items.last == item
     }
 }
+
+// MARK: ✅✅✅`Associated Types`✅✅✅
+/**
+ Definition:
+ • An associated type is a plceholder type declare inside a protocol.
+ • It represents a type that will be specified later by the conforming type.
+ • Declare using the keyword
+ 
+ associatedType Item
+ 
+ Why Associated Types are needed?
+ 
+➡️  `Protocols can't store values, they can describe behaviour`
+ • Refer to a type wihout knowing what it is.
+ • Enforce relationShip between method inputs and outputs.
+ • Stay generic and reusable.
+ 
+ In short to make a protocol generic, that can work with any type we use associated Type.
+ 
+ 🌟 2. Associated Types in Action – Container Protocol
+ protocol Container {
+     associatedtype Item
+     mutating func append(_ item: Item)
+     var count: Int { get }
+     subscript(i: Int) -> Item { get }
+ }
+
+ 
+ What the container protocol requires:
+ Any type conforming to Container must provide:
+ • append(_:)
+ - Adds new element
+ - The element must be of type Item
+ 
+ • count
+ - Returns number of items.
+ - Must return Int.
+ 
+ • Subscript
+ - Retrives an item using an index.
+ - must return the same type Item.
+ 
+ What Container does not specify?
+ • How items are stored
+ • What the actual itme type is
+ • Whether it is an array, stack, set etc.
+ 
+ 🌟 3. Why Associated Types Are Essential Here
+ Without associatedType Item:
+ • Protocol couldn't ensure  append() and subscript use the same type
+ • There would be no type safety
+ • Generic container behaviour would be impossible.
+ 
+ 
+ 🌟 4. Conforming a Concrete Type (IntStack)
+ struct IntegerStack: Container {
+     var items: [Int] = []
+     
+     mutating func push(_ item: Int) {
+         items.append(item)
+     }
+     
+     mutating func pop(_ item: Int) {
+         items.removeLast()
+     }
+     
+     typealias Item = Int
+     
+     mutating func append(_ item: Int) {
+         push(item)
+     }
+     
+     var count: Int {
+         items.count
+     }
+     
+     subscript(i: Int) -> Int {
+         items[i]
+     }
+ }
+ 
+ 
+ ➡️ What typealias Item = Int Means
+ • It assigns a concret type to the associated type.
+ • It tells swift: "For the container, Item is Int"
+ 
+ Type Inference
+ • Swift can infer Item = Int automatically by explaining:
+ - append(_:) parameter type
+ - subscript return type
+ 
+ `so typealias Item = Int is optional.`
+ 
+ 
+ 
+ 🌟 5. Conforming a Generic Type (Stack<Element>)
+ struct GenericsConformationAssocatedType<Element>: Container {
+     var items: [Element] = []
+     
+     mutating func push(_ item: Element) {
+         items.append(item)
+     }
+     
+     mutating func pop(_ item: Element) {
+         items.removeLast()
+     }
+     
+     mutating func append(_ item: Element) {
+         push(item)
+     }
+     
+     var count: Int {
+         items.count
+     }
+     
+     subscript(i: Int) -> Item {
+         items[i]
+     }
+ }
+
+ ➡️ How associated type is resoved
+ • Element becomes associated tyep Item
+ • swift infers: Item == Element
+ 
+ 🌟 6. Extending Existing Types (Array)
+ 
+ extension Array: Container {}
+
+ Why does this work?
+ Because Array already has:
+ • append(_:)
+ • count
+ • subscript(Int)
+ 
+ Swift infers: Item == Element
+ 
+ 
+ 🌟 7. Adding Constraints to an Associated Type:
+ protocol Container2 {
+     associatedtype Item: Equatable
+     
+     // ... Rest Behaviour.
+ }
+
+ 
+ Meaning:
+ • Any conforming type must an Item that conforms to Equatable
+ • Enables use of == and !=
+ 
+ 
+ 🌟 8. Using the Protocol in Its Own Associated Type:
+ 
+ */
+
+// Associated type in Action
+protocol Container {
+    associatedtype Item
+    mutating func append(_ item: Item)
+    var count: Int { get }
+    subscript(i: Int) -> Item { get }
+}
+
+// 🌟  Conforming a Concrete Type (IntStack)
+
+struct IntegerStack: Container {
+    var items: [Int] = []
+    
+    mutating func push(_ item: Int) {
+        items.append(item)
+    }
+    
+    mutating func pop(_ item: Int) {
+        items.removeLast()
+    }
+    
+    typealias Item = Int
+    
+    mutating func append(_ item: Int) {
+        push(item)
+    }
+    
+    var count: Int {
+        items.count
+    }
+    
+    subscript(i: Int) -> Int {
+        items[i]
+    }
+}
+
+
+// 🌟  Conforming a Generic Type (Stack<Element>)
+struct GenericsConformationAssocatedType<Element>: Container {
+    var items: [Element] = []
+    
+    mutating func push(_ item: Element) {
+        items.append(item)
+    }
+    
+    mutating func pop(_ item: Element) {
+        items.removeLast()
+    }
+    
+    mutating func append(_ item: Element) {
+        push(item)
+    }
+    
+    var count: Int {
+        items.count
+    }
+    
+    subscript(i: Int) -> Item {
+        items[i]
+    }
+}
+
+
+protocol Container2 {
+    associatedtype Item: Equatable
+    
+    // ... Rest Behaviour.
+}
+
+extension Array: Container {}
