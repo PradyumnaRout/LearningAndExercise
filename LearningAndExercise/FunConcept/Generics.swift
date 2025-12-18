@@ -473,7 +473,20 @@ extension CustomStack where Element: Equatable {
  • Enables use of == and !=
  
  
- 🌟 8. Using the Protocol in Its Own Associated Type:
+ 🌟 8. Protocol Extensions with Constraints:
+ 
+ extension Container weher Item: Equatable {
+    func startsWith(_ item: Item) -> Bool {
+        count >= 1 && self[0] == item
+    }
+ }
+ 
+ ➡️ Here if the item is Equatable then only it can call the startWith() method other wise not.
+ 
+ 
+ 🌟  Associated Types with Where Clauses
+ 
+ associatedType Iterator: IteratorProtocol weher Iteration.Element == Item
  
  */
 
