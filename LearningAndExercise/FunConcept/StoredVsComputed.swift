@@ -38,8 +38,15 @@ struct Player {
 // MARK: - 🍱 2) Stored Property Initialized with a Closure
 // This does store a value.
 // The closure runs once at initialization and the resulting value is stored.
+// A property observer is a Swift feature that lets you run code automatically when the value of a stored property changes.
 
 struct Person {
+    var firstName: String {
+        didSet {
+            firstName = firstName.uppercased()
+        }
+    }
+    
     var greeting: String = {
         print("Calculating...")
         return "Hello John"
@@ -67,6 +74,8 @@ struct Person {
     
     /// `🧩 willSet / didSet → Stored Property Observers
     // Used with stored properties to watch changes after Swift has already handled storage.
+    // In Swift, property observers (willSet / didSet) do not run when properties are set inside init.
+    // 📌 Property observers only run after initialization, when the property is mutated later.
     var score: Int = 0 {
         willSet {
             print("Score will become \(newValue)")
@@ -90,8 +99,10 @@ struct Person {
 
 
 // MARK: - 🧮 Computed Property
+// A computed property is a property that does not store a value itself but instead calculates (or transforms) its value every time it is accessed or modified, using get and/or set.
 // A computed property does not store data.
 // It performs a little calculation every time you ask for it.
+// get / set can not have a initial value. If you want to give initial value it will cause error.
 
 struct Rectangle {
     var width: Double
@@ -109,8 +120,23 @@ struct Rectangle {
             height = newValue / 4
         }
     }
-    
     /**
+     ✅ Do get / set of a computed property run in init?
+     🔹 set → YES
+     🔹 get → YES
+
+     But only when they are accessed or assigned, not automatically.
+     
+     🔍 Why computed properties work during init
+     
+     Computed properties do not store values. They execute code whenever:
+
+     🔹 get → the property is read
+     🔹 set → the property is written
+     
+     This is true even inside init.
+
+
      🖍️ No memory box for area.
      It’s like a chef who cooks your meal fresh every time you order.
 
@@ -154,6 +180,62 @@ struct Rectangle {
         var doubled: Int { number * 2 }
      */
 }
+
+// MARK: Important quesion on computed property
+/**
+ struct Student {
+     private var _firstName: String
+
+     var firstName: String {
+         get {
+             return _firstName
+         }
+         set {
+             _firstName = newValue.uppercased()
+         }
+     }
+ }
+
+
+ in the above if I do not create private var _firstName: String and directly return firstName and also assing new value to firstName then why compiler giving error of may cause recursion. Why?
+ 
+ 
+ Ans -
+ 
+ ❓ Why does the compiler say “may cause recursion”?
+
+ Because firstName would be calling itself.
+
+ When you write a computed property, the property name refers to the computed property itself, not to some hidden storage.
+ 
+ struct Student {
+     var firstName: String {
+         get {
+             return firstName   // ❌ refers to itself
+         }
+         set {
+             firstName = newValue.uppercased() // ❌ refers to itself
+         }
+     }
+ }
+
+ 
+ // so always use another variable
+ ✅ Correct Pattern (Why _firstName Exists)
+ 
+ struct Student {
+     private var _firstName: String
+
+     var firstName: String {
+         get {
+             return _firstName
+         }
+         set {
+             _firstName = newValue.uppercased()
+         }
+     }
+ }
+ */
 
 
 

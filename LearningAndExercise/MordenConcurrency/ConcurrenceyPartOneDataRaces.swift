@@ -257,18 +257,67 @@ class UseSecureCounter {
     func usage() {
         DispatchQueue.global().async {
             for _ in 0..<100 {
+                print("counter increment: \(self.counter.getValue())")
                 self.counter.increment()
             }
         }
         
         DispatchQueue.global().async {
             for _ in 0..<10 {
+                print("counter decrement: \(self.counter.getValue())")
                 self.counter.decrement()
             }
         }
         
         DispatchQueue.main.async {
             print("Counter value:", self.counter.getValue())
+        }
+    }
+}
+
+final class DataManager {
+
+    // MARK: - Singleton Instance (thread-safe by Swift runtime)
+    static let shared = DataManager()
+
+    // MARK: - Private Init prevents external creation
+    private init() {}
+
+    // MARK: - Protected State
+    private var value: Int = 0
+
+    // MARK: - Synchronization Queue
+    private let queue = DispatchQueue(label: "com.example.DataManager.queue")
+
+    // MARK: - Thread-safe methods
+    func setValue(_ newValue: Int) {
+        queue.sync {
+            value = newValue
+        }
+    }
+
+    func getValue() -> Int {
+        queue.sync {
+            value
+        }
+    }
+}
+
+
+class DataManagerExecution {
+    func execute() {
+        DispatchQueue.global().async {
+            for i in 10...20 {
+                DataManager.shared.setValue(i)
+            }
+        }
+
+        DispatchQueue.global().async {
+            print(DataManager.shared.getValue())
+        }
+        
+        DispatchQueue.global().async {
+            DataManager.shared.setValue(200)
         }
     }
 }

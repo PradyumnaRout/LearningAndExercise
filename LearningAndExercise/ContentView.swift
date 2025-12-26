@@ -8,14 +8,11 @@
 import SwiftUI
 
 struct ContentView: View {
-    
-//    var sub = UserViewModel()
-//    var obj = BasicAsyncStream()
-    
-    // Custom publisher
-//        let publisher = StringPublisher(inputValue: "hello world")
-//        let subscriber = StringSubscriber()
-    let publisher = OperatorCombineLatest()
+    let obj = PropertyWrapperExecution(
+        firstName: "steve",
+        lastName: "jobs",
+        score: 120
+    )
 
     
     var body: some View {
@@ -27,14 +24,12 @@ struct ContentView: View {
         }
         .padding()
         .onAppear {
-            // Custom publisher
-//            publisher.subscribe(subscriber)
-//            AppEnvironment.logConfiguration()
-//            sub.testLazyProperty()
-//            sub.addNewOne()
+            print("FistName: \(obj.firstName), LastName: \(obj.lastName), score:\(obj.score)")
+            obj.firstName = "aman"
+            obj.lastName = "gupta"
+            obj.score = 75
             
-//            obj.basicExample()
-            publisher.testCombineLatestWith2()
+            print("FistName: \(obj.firstName), LastName: \(obj.lastName), score:\(obj.score)")
         }
     }
 }

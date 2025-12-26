@@ -430,7 +430,7 @@ extension CustomStack where Element: Equatable {
          items.removeLast()
      }
      
-     mutating func append(_ item: Element) {
+     mutating func append(_ item: Element) {        // Here associated type resolved.
          push(item)
      }
      

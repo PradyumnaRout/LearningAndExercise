@@ -438,5 +438,5 @@ import Foundation
              return CGSize(width: width, height: height)
          }
      }
- }    
+ }
  */
