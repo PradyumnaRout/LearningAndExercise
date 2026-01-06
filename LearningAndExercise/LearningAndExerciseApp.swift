@@ -11,8 +11,10 @@ import SwiftUI
 struct LearningAndExerciseApp: App {
     var body: some Scene {
         WindowGroup {
-            ContentView()
+//            ContentView()
 //            UserView()
+//            ImageGridView()
+            MasonryGridView()
         }
     }
 }
