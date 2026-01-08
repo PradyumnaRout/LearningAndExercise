@@ -9,7 +9,7 @@
 // https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/CoreData/LifeofaManagedObject.html#//apple_ref/doc/uid/TP40001075-CH16-SW1
 // https://developer.apple.com/library/archive/qa/qa1952/_index.html
 
-
+// MARK: Renaming an attribute is under light weight migration, which we can acheive using renaming identifier, Renaming ID = dateAdded(Previous attribute name)
 import Foundation
 import CoreData
 

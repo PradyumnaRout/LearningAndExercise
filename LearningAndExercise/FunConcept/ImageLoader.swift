@@ -379,7 +379,7 @@ class TwoLevelImageCache {
 
 // 1000 Image view
 struct ImageSource {
-    static let urls: [URL] = (1...100).compactMap {
+    static let urls: [URL] = (1...1000).compactMap {
         URL(string: "https://picsum.photos/id/\($0)/800/1200")
     }
 }

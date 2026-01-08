@@ -206,7 +206,7 @@ class PointValue {
 }
 
 
-// User the above like  key/value pair:
+// Use the above like  key/value pair:
 struct PointValueKey: EnvironmentKey {
     static var defaultValue: PointValue = PointValue(value: 20.0)
 }
@@ -589,4 +589,129 @@ struct EmtryMacro: View {
  One-line takeaway
 
  .navigationDestination(item:) is the cleanest lazy navigation API when you only need one active destination.
+ */
+
+
+
+/**
+ struct UserStateEnvironmentKey: EnvironmentKey {
+     static var defaultValue: UserState = .new
+ }
+
+ extension EnvironmentValues {
+     public var userState: UserState {
+         get { self[UserStateEnvironmentKey.self] }
+         set { self[UserStateEnvironmentKey.self] = newValue }
+     }
+ }
+
+ extension EnvironmentValues {
+     @Entry var userState2 = UserState.new
+ }
+
+ 
+ I want to use both userState and userState2 in a single view, so will it behave different for different values, give an example of that and how one key
+ 
+ 
+ 1️⃣ What userState is (classic EnvironmentKey)
+ struct UserStateEnvironmentKey: EnvironmentKey {
+     static var defaultValue: UserState = .new
+ }
+
+ extension EnvironmentValues {
+     var userState: UserState {
+         get { self[UserStateEnvironmentKey.self] }
+         set { self[UserStateEnvironmentKey.self] = newValue }
+     }
+ }
+
+ Key points
+
+ UserStateEnvironmentKey is a unique identity
+
+ userState is backed by that specific key
+
+ SwiftUI environment lookup is key-based, not type-based
+
+ So this:
+
+ .environment(\.userState, .loggedIn)
+
+
+ only affects views that read \Environment(\.userState)
+
+ 2️⃣ What userState2 is (@Entry macro)
+ extension EnvironmentValues {
+     @Entry var userState2 = UserState.new
+ }
+
+ Key points
+
+ @Entry generates a brand-new EnvironmentKey under the hood
+
+ That key is not UserStateEnvironmentKey
+
+ Even though:
+
+ same type (UserState)
+
+ same default value (.new)
+
+ They are completely independent environment entries
+
+ Think of it as SwiftUI generating something like:
+
+ struct UserState2EnvironmentKey: EnvironmentKey {
+     static let defaultValue = UserState.new
+ }
+
+
+ …but hidden from you.
+
+ 3️⃣ Using BOTH in the same view (they can differ)
+ struct ContentView: View {
+     @Environment(\.userState) var userState
+     @Environment(\.userState2) var userState2
+
+     var body: some View {
+         VStack {
+             Text("userState: \(userState.description)")
+             Text("userState2: \(userState2.description)")
+         }
+     }
+ }
+
+ Setting different values
+ ContentView()
+     .environment(\.userState, .loggedIn)
+     .environment(\.userState2, .guest)
+
+ Result
+ userState: loggedIn
+ userState2: guest
+
+
+ ✅ They do NOT sync
+ ✅ They do NOT override each other
+ ✅ They behave independently
+
+ 4️⃣ Why one EnvironmentKey cannot be “valid for two”
+
+ This is the crucial rule:
+
+ SwiftUI environment identity is the key type, not the value type
+
+ So even though:
+
+ UserState
+ UserState.new
+
+
+ are identical, the keys are:
+
+ UserStateEnvironmentKey
+
+ (hidden) UserState2EnvironmentKey
+
+ They are different types, so SwiftUI treats them as different slots.
  */
