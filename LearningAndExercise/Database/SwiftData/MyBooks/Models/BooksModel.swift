@@ -26,6 +26,10 @@ class Book {
     var rating: Int?
     var status: Status.RawValue
     var recommendedBy: String = ""
+    @Relationship(deleteRule: .cascade)  // For deleting relation ship datas.
+    var quotes: [Quote]?
+    @Relationship(inverse: \Genre.books)
+    var genres: [Genre]?
     
     // Some Other important attributes, if you add, SwiftData will handle its migration automatically.
 //    @Attribute(.externalStorage)
@@ -83,7 +87,7 @@ enum Status: Int, Codable, Identifiable, CaseIterable {
         self
     }
     
-    var desc: String {
+    var desc: LocalizedStringResource {
         switch self {
         case .onShelf: "On Shelf"
         case .inProgress: "In Progress"

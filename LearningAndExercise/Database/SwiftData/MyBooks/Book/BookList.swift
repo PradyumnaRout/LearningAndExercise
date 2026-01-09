@@ -51,12 +51,23 @@ struct BookList: View {
                                 VStack(alignment: .leading) {
                                     Text(book.title).font(.title2)
                                     Text(book.author).foregroundStyle(.secondary)
+                                    Text("Recommended By: \(book.recommendedBy)")
+                                        .foregroundStyle(.secondary)
+                                        .font(.caption)
+                                        .padding(.bottom, 5)
                                     if let rating  = book.rating {
                                         HStack {
                                             ForEach(0..<rating, id: \.self) { _ in
                                                 Image(systemName: "star.fill")
                                                     .imageScale(.small)
                                                     .foregroundStyle(.yellow)
+                                            }
+                                        }
+                                    }
+                                    if let genres = book.genres {
+                                        ViewThatFits {
+                                            ScrollView(.horizontal, showsIndicators: false) {
+                                                GenreStackView(genres: genres)
                                             }
                                         }
                                     }

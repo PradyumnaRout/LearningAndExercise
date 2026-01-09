@@ -10,6 +10,7 @@ import SwiftUI
 struct EditBookView: View {
     @Environment(\.dismiss) var dismiss
     @Bindable var book: Book
+    @State var showGenre = false
     
     var body: some View {
         NavigationStack {
@@ -27,6 +28,10 @@ struct EditBookView: View {
                     }
                     .pickerStyle(.menu)
                     .buttonStyle(.bordered)
+                }
+                
+                Section("Recommended By") {
+                    TextField("Recommended By", text: $book.recommendedBy)
                 }
                 
                 Section("Rating") {
@@ -49,12 +54,41 @@ struct EditBookView: View {
                             }
                         }
                 }
-                
+                                
                 Section("Summary") {
                     TextEditor(text: $book.synopsis)
                         .frame(minHeight: 120)
+                    
+                    NavigationLink {
+                        QuoteListView(book: book)
+                    } label: {
+                        let count = book.quotes?.count ?? 0
+                        Label("\(count) Quotes", systemImage: "quote.opening")
+                    }
+                    .buttonStyle(.bordered)
+                    .padding(.horizontal)
+                }
+                
+                Section {
+                    Button {
+                        showGenre.toggle()
+                    } label: {
+                        Text("Geners")
+                    }
+                    .foregroundStyle(.black)
+                    
+                    if let genres = book.genres {
+                        ViewThatFits {
+                            ScrollView(.horizontal, showsIndicators: false) {
+                                GenreStackView(genres: genres)
+                            }
+                        }
+                    }
                 }
             }
+            .sheet(isPresented: $showGenre, content: {
+                GenresView(book: book)
+            })
             .navigationTitle("Edit Book")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

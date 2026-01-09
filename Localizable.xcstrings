@@ -1,0 +1,190 @@
+{
+    "sourceLanguage" : "en",
+    "strings" : {
+        "%lld of %lld" : {
+            "localizations" : {
+                "de" : { "stringUnit" : { "state" : "translated", "value" : "%1$lld von %2$lld" } },
+                "en" : { "stringUnit" : { "state" : "new", "value" : "%1$lld of %2$lld" } }
+            }
+        },
+        
+        "%lld Quotes" : {
+            "localizations" : {
+                "de" : {
+                    "variations" : {
+                        "plural" : {
+                            "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld Zitat" } },
+                            "other" : { "stringUnit" : { "state" : "translated", "value" : "%lld Zitate" } }
+                        }
+                    }
+                },
+                "en" : {
+                    "variations" : {
+                        "plural" : {
+                            "one" : { "stringUnit" : { "state" : "translated", "value" : "%lld Quote" } },
+                            "other" : { "stringUnit" : { "state" : "new", "value" : "%lld Quotes" } }
+                        }
+                    }
+                }
+            }
+        },
+        
+        "%lld/5" : {
+            "localizations" : {
+                "de" : { "stringUnit" : { "state" : "translated", "value" : "%lld/5" } }
+            }
+        },
+        
+        "Add" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Hinzufügen" }}} },
+        "Add User" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Benutzer hinzufügen" }}} },
+        "Age" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Alter" }}} },
+        
+        "Age: %@) type: %@" : {
+            "localizations" : {
+                "de" : { "stringUnit" : { "state" : "translated", "value" : "Alter: %1$@) Typ: %2$@" } },
+                "en" : { "stringUnit" : { "state" : "new", "value" : "Age: %1$@) type: %2$@" } }
+            }
+        },
+        
+        "Animate Values" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Werte animieren" }}} },
+        "Are you sure you want to delete the item?" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Möchten Sie das Element wirklich löschen?" }}} },
+        
+        "author" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Autor" }}} },
+        "Author" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Autor" }}} },
+        
+        "Back" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Zurück" }}} },
+        "Book Info" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Buchinfo" }}} },
+        "Book Title" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Buchtitel" }}} },
+        "Cancel" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Abbrechen" }}} },
+        
+        "Change Color" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Farbe ändern" }}} },
+        "Change Size" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Größe ändern" }}} },
+        "Color: " : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Farbe: " }}} },
+        
+        "Complete Profile" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Profil vervollständigen" }}} },
+        "Completed" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Abgeschlossen" }}} },
+        
+        "Create" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Erstellen" }}} },
+        "Create Genre" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Genre erstellen" }}} },
+        "Create new Genre" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Neues Genre erstellen" }}} },
+        
+        "Delete Item!" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Element löschen!" }}} },
+        "Detail View" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Detailansicht" }}} },
+        "Done" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Fertig" }}} },
+        
+        "Edit Book" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Buch bearbeiten" }}} },
+        "Edit User" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Benutzer bearbeiten" }}} },
+        "Edit User Details" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Benutzerdetails bearbeiten" }}} },
+        
+        "Email" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "E-Mail" }}} },
+        "Enter Color" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Farbe eingeben" }}} },
+        "Enter Memory" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Erinnerung eingeben" }}} },
+        "Enter Price" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Preis eingeben" }}} },
+        "Enter your first book" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Geben Sie Ihr erstes Buch ein" }}} },
+        
+        "Entry View" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Eingabeansicht" }}} },
+        "Filter on title or author" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Nach Titel oder Autor filtern" }}} },
+        
+        "First Name" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Vorname" }}} },
+        "Gallery" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Galerie" }}} },
+        "Generation: " : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Generation: " }}} },
+        
+        "Geners" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Genres" }}} },
+        "genre" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Genre" }}} },
+        
+        "Go to detail" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Zur Detailansicht" }}} },
+        "Hello World" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Hallo Welt" }}} },
+        "Hello, world!" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Hallo, Welt!" }}} },
+        "Hii" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Hallo" }}} },
+        
+        "Home" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Startseite" }}} },
+        "In Progress" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "In Bearbeitung" }}} },
+        
+        "Item %lld" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Element %lld" }}} },
+        "Last Name" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Nachname" }}} },
+        
+        "Loading Data..." : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Daten werden geladen..." }}} },
+        
+        "Lorem ipsum dolor sit amet" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Lorem ipsum dolor sit amet" }}} },
+        
+        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum." :
+        { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua." }}} },
+        
+        "Matched Geometry" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Abgestimmte Geometrie" }}} },
+        "Memory: " : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Erinnerung: " }}} },
+        
+        "My Books" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Meine Bücher" }}} },
+        "New Book" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Neues Buch" }}} },
+        "New Genre" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Neues Genre" }}} },
+        "New User Details" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Neue Benutzerdetails" }}} },
+        
+        "Next Screen" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Nächster Bildschirm" }}} },
+        "No Data Found" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Keine Daten gefunden" }}} },
+        
+        "None" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Keine" }}} },
+        "Offset: %lld" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Versatz: %lld" }}} },
+        
+        "OK" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "OK" }}} },
+        "On Shelf" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Im Regal" }}} },
+        
+        "Page" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Seite" }}} },
+        "page #" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Seite #" }}} },
+        
+        "Page %lld" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Seite %lld" }}} },
+        "Page: %@" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Seite: %@" }}} },
+        "Page: %lld" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Seite: %lld" }}} },
+        
+        "Paging" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Seitennavigation" }}} },
+        "Place" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Ort" }}} },
+        "Place: %@" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Ort: %@" }}} },
+        
+        "point Value as key/value: %lf" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Punktwert als Schlüssel/Wert: %lf" }}} },
+        "Point value directly: %lf" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Punktwert direkt: %lf" }}} },
+        
+        "Price: " : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Preis: " }}} },
+        "Profile Pic (e.g., system icon name)" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Profilbild (z. B. System-Icon-Name)" }}} },
+        
+        "Quotes" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Zitate" }}} },
+        "Rating" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Bewertung" }}} },
+        
+        "Recommended By" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Empfohlen von" }}} },
+        "Recommended By: %@" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Empfohlen von: %@" }}} },
+        
+        "Save" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Speichern" }}} },
+        
+        "Screen Type: %@" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Bildschirmtyp: %@" }}} },
+        "ScreenOne" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Bildschirm Eins" }}} },
+        "Scroll Demo" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Scroll-Demo" }}} },
+        
+        "Search..." : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Suchen..." }}} },
+        "Second" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Zweite" }}} },
+        "set the genre color" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Genre-Farbe festlegen" }}} },
+        
+        "Sort" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Sortieren" }}} },
+        "Starting Shpae: %@" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Startform: %@" }}} },
+        
+        "status" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Status" }}} },
+        "Status" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Status" }}} },
+        
+        "Summary" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Zusammenfassung" }}} },
+        "Third" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Dritte" }}} },
+        
+        "title" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Titel" }}} },
+        "Title" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Titel" }}} },
+        
+        "Toggle Zoom" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Zoom umschalten" }}} },
+        "Update" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Aktualisieren" }}} },
+        
+        "Users List" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Benutzerliste" }}} },
+        "Year: " : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Jahr: " }}} },
+        
+        "You need to create some genres first." : {
+            "localizations" : {
+                "de" : { "stringUnit" : { "state" : "translated", "value" : "Sie müssen zuerst einige Genres erstellen." } }
+            }
+        },
+        
+        "Zoom Text" : { "localizations" : { "de" : { "stringUnit" : { "state" : "translated", "value" : "Text zoomen" }}} }
+    },
+    "version" : "1.1"
+}

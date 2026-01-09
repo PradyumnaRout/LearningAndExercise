@@ -82,7 +82,7 @@ struct MoodSelectionView: View {
                 .onTapGesture {
                     if selectedMood == mood {
                         withAnimation(.bouncy(duration: 0.5)) {
-                            selectedMood = nil
+                            selectedMood = mood
                         }
                     } else {
                         withAnimation(.bouncy(duration: 0.5, extraBounce: 0.05)) {

@@ -24,7 +24,7 @@ extension Book {
             dateStarted: Date(),
             synopsis: "Best practices for writing clean, maintainable code.",
             rating: 4,
-            status: .inProgress
+            status: .inProgress,
         ),
         Book(
             title: "Swift Programming",
