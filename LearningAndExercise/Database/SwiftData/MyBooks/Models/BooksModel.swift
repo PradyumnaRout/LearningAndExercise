@@ -16,6 +16,8 @@ import SwiftData
 
 @Model
 class Book {
+//    #Index<Book>([\.title], [\.genres])
+//    #Unique<Book>([\.title, \.author])        //“Do not allow two books with the same title AND author.”
     var title: String
     var author: String
     var dateAdded: Date
@@ -30,6 +32,12 @@ class Book {
     var quotes: [Quote]?
     @Relationship(inverse: \Genre.books)
     var genres: [Genre]?
+    
+    // MARK: If you store all of your data for all of your book images directly in your sqlite database that used for swiftData, it won't be long before your data store gets bloated. And likely things will start to slow down and you might run into issues. Well both swiftData and Core data have an option that let you store the object as a reference only and then it stores the actual image locally in some hidden folder. All we have to do enable that is to provide an attribute .extenalStore for the property. Similarly in core data Enable "Allows External Storage" in the inspectore in the core data model. It will also store it in your cloudKit repo as well as an asset.
+    
+    // To see the uploaded data go to the folder location (Application Support) and type CMD + Shift + Period(.) to show hidden folder. There you can find the uploaded data.
+    @Attribute(.externalStorage)
+    var bookCover: Data?
     
     // Some Other important attributes, if you add, SwiftData will handle its migration automatically.
 //    @Attribute(.externalStorage)
@@ -95,3 +103,60 @@ enum Status: Int, Codable, Identifiable, CaseIterable {
         }
     }
 }
+
+/**
+ What is #Index<Book>([\.title], [\.genres]) ?
+ 
+ It tells SwiftData: “Please make searching by title and genres fast for Book objects.”
+ 
+ Why is that useful?
+ 
+ Imagine you have 10,000 books. If you search for:
+ Find all books with title = "Dune"
+ 
+ Without an index → SwiftData checks every single book 😴
+ With an index → SwiftData jumps directly to matching books ⚡️
+ 
+ Real-world analogy
+
+ Think of a phone book 📖
+ Without an index → you flip through every page
+ With an index (alphabetical tabs) → you jump straight to "D"
+ That’s exactly what an index does.
+
+ 
+ How it looks in code
+ @Model
+ #Index<Book>([\.title], [\.genres])
+ class Book {
+     var title: String
+     var genres: [String]
+ }
+
+
+ This means:
+
+ You store books
+ You often search by title or genres
+ SwiftData should optimize for that
+ 
+ 
+ What is #Unique<Book>([\.title, \.author])?
+ It tells SwiftData:  “Do not allow two books with the same title AND author.”
+ 
+ So this is allowed:
+
+ "Dune" by Frank Herbert
+ "Dune" by Someone Else
+
+ But this is NOT allowed:
+
+ "Dune" by Frank Herbert
+ "Dune" by Frank Herbert ❌ duplicate
+ 
+ SwiftData will throw an error when saving:
+ let book = Book(title: "Dune", author: "Frank Herbert")
+ context.insert(book)
+ try context.save() // ❌ error if duplicate exists
+
+ */

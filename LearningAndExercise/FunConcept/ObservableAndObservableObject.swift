@@ -7,6 +7,10 @@
 
 import Foundation
 
+// MARK: Bindable
+// https://medium.com/@jefinabduljaleel/state-binding-and-bindable-in-swiftui-661377090eb6
+// https://www.donnywals.com/whats-the-difference-between-binding-and-bindable/
+
 // what if I want to user it inside my viewmodel
 
 /**
@@ -273,4 +277,208 @@ import Foundation
  replacing @ObservedObject
 
  a full MVVM flow
+ */
+
+
+/**
+ @Observable class MyCounter { @Bindable var count = 0 } struct ContentView: View { var counter: MyCounter = MyCounter() init() {} var body: some View { VStack { Text("The count is \(counter.count)") // This will now get compiled MyButton(count: $counter.count) } .padding() } } In the above example the property of the @Observable model is marked as @Bindable, can you explain me about that
+ 
+ 
+ You cannot put @Bindable on a property inside an @Observable class.
+
+ This line is incorrect:
+
+ @Observable
+ class MyCounter {
+     @Bindable var count = 0   // ❌ This is not allowed
+ }
+
+
+ @Bindable is a View-only property wrapper.
+ It is not meant to be used inside models.
+
+ ✅ The Correct Pattern
+ Model
+ import Observation
+
+ @Observable
+ class MyCounter {
+     var count = 0   // ✅ normal stored property
+ }
+
+ View
+ struct ContentView: View {
+     @State private var counter = MyCounter()   // owner
+
+     var body: some View {
+         VStack {
+             Text("The count is \(counter.count)")
+             MyButton(count: $counter.count)   // binding works automatically
+         }
+         .padding()
+     }
+ }
+
+ Button View
+ struct MyButton: View {
+     @Binding var count: Int
+
+     var body: some View {
+         Button("Increment") {
+             count += 1
+         }
+     }
+ }
+
+
+ This works because:
+
+ @Observable makes count observable
+
+ SwiftUI automatically synthesizes $counter.count as a Binding<Int>
+
+ No @Bindable is needed inside the model
+
+ 🔍 What @Bindable Actually Does
+
+ @Bindable is used in a View when you receive an observable object and want bindings to its properties.
+
+ Example
+ struct CounterView: View {
+     @Bindable var counter: MyCounter   // 👈 this is where @Bindable goes
+
+     var body: some View {
+         VStack {
+             Text("Count: \(counter.count)")
+             Button("Increment") {
+                 counter.count += 1
+             }
+         }
+     }
+ }
+
+
+ Now SwiftUI allows:
+
+ TextField("Count", value: $counter.count, format: .number)
+
+
+ Because @Bindable exposes bindings to the model’s properties.
+
+ 🔹 Correct Data Flow Pattern
+ @State owns the model
+    ↓
+ @Bindable exposes bindings
+    ↓
+ @Observable publishes changes
+    ↓
+ SwiftUI updates UI
+
+ ❌ Why @Bindable inside the model is wrong
+ Reason    Explanation
+ @Bindable is a View wrapper    It only works in SwiftUI views
+ Observation already tracks properties    @Observable handles publishing
+ It breaks the macro system    Observation macro expects plain properties
+ Bindings are created by SwiftUI    Not by the model
+ ✅ If your goal is this:
+ MyButton(count: $counter.count)
+
+
+ You only need:
+
+ @Observable class MyCounter { var count = 0 }
+
+
+ SwiftUI automatically provides $counter.count.
+ */
+
+
+
+// MARK:  differnce between @State private var counter = Counter() And private var counter = Counter()
+/**
+ 
+ @Observable
+ class Counter {
+     var value = 0
+ }
+ 
+ 
+ my concern is what is the difference between
+ @State private var counter = Counter()
+ and
+ private var counter = Counter()
+
+ Excellent — this gets to the heart of how SwiftUI’s view lifecycle works.
+
+ The difference is who owns the memory and whether SwiftUI preserves it across view updates.
+
+ The Core Difference
+ ✅ With @State
+ @State private var counter = Counter()
+
+
+ SwiftUI:
+
+ Stores counter outside the view struct
+
+ Preserves it across view redraws
+
+ Keeps the same instance alive
+
+ Tracks reads to counter's observable properties
+
+ Triggers view updates when counter changes
+
+ This is the correct way to store an @Observable model in a view.
+
+ ❌ Without @State
+ private var counter = Counter()
+
+
+ SwiftUI:
+
+ Recreates counter every time the view recomputes
+
+ Loses all previous state
+
+ Breaks observation tracking
+
+ Causes unexpected resets
+
+ Because SwiftUI views are value types, they are recreated frequently. A normal var is reinitialized every time.
+
+ This means:
+
+ struct ContentView: View {
+     private var counter = Counter()   // ❌ BAD
+
+     var body: some View {
+         Text("\(counter.value)")
+     }
+ }
+
+
+ Every UI update creates a brand new Counter().
+
+ What actually happens during a redraw
+
+ When SwiftUI updates the UI:
+
+ It creates a new ContentView struct
+
+ All stored properties are reinitialized
+
+ counter = Counter() runs again
+
+ Old instance is discarded
+
+ So your state is lost.
+
+ Why @State fixes this
+
+ @State tells SwiftUI:
+
+ "This value is persistent state. Store it outside the view struct and keep it alive."
+
+ So SwiftUI keeps the same Counter instance even though the view struct itself is recreated.
  */

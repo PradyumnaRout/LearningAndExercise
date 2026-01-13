@@ -332,3 +332,58 @@ class AsyncTest {
     }
 }
 
+
+
+/**
+ ✅ What is Task?
+
+ Task creates a new concurrent unit of work.
+
+ Think of it as:
+
+ “Start this async work in the background without blocking the current thread.”
+
+ It’s Swift’s way of saying:
+ ➡️ Run this asynchronously.
+
+ 🔹 Why is Task needed?
+
+ Because await can only be used inside an async context.
+
+ So when you're in a normal function (like a button tap, viewDidLoad, etc.) and you want to call an async function, you must wrap it in a Task.
+
+ Example
+ func buttonTapped() {
+     Task {
+         await loadData()
+     }
+ }
+
+
+ Without Task, this is illegal:
+
+ func buttonTapped() {
+     await loadData() ❌ Compile error
+ }
+
+ 🔹 What does Task actually do?
+
+ When you write:
+
+ Task {
+     await apiCall()
+ }
+
+
+ It:
+
+ Creates a lightweight concurrent thread
+
+ Runs your async code
+
+ Doesn't block UI
+
+ Automatically manages cancellation & memory
+
+ Runs on Swift’s cooperative thread pool
+ */

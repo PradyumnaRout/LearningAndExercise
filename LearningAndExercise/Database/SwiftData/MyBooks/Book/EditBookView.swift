@@ -6,15 +6,51 @@
 //
 
 import SwiftUI
+import PhotosUI
 
 struct EditBookView: View {
     @Environment(\.dismiss) var dismiss
-    @Bindable var book: Book
+    @Bindable var book: Book        // Reson why it is @Bindable(Below)
     @State var showGenre = false
+    @State private var selectedBookCover: PhotosPickerItem?
     
     var body: some View {
         NavigationStack {
             Form {
+                
+                Section("Book Cover") {
+                    PhotosPicker(
+                        selection: $selectedBookCover,
+                        matching: .images,
+                        photoLibrary: .shared()) {
+                            Group {
+                                if let coverData = book.bookCover,
+                                   let uiImage = UIImage(data: coverData) {
+                                    Image(uiImage: uiImage)
+                                        .resizable()
+                                        .scaledToFit()
+                                } else {
+                                    Image(systemName: "photo")
+                                        .resizable()
+                                        .scaledToFit()
+                                        .tint(.primary)
+                                }
+                            }
+                            .frame(width: 75, height: 100)
+                            .overlay(alignment: .bottomTrailing) {
+                                if book.bookCover != nil {
+                                    Button {
+                                        selectedBookCover = nil
+                                        book.bookCover = nil
+                                    } label: {
+                                        Image(systemName: "x.circle.fill")
+                                            .foregroundStyle(.red)
+                                    }
+                                }
+                            }
+                        }
+                }
+                
                 Section("Book Info") {
                     TextField("Title", text: $book.title)
                     TextField("Author", text: $book.author)
@@ -86,6 +122,12 @@ struct EditBookView: View {
                     }
                 }
             }
+            .task(id: selectedBookCover, {
+                // Run async task with id, when id changes it will execute
+                if let data = try? await selectedBookCover?.loadTransferable(type: Data.self) {
+                    book.bookCover = data
+                }
+            })
             .sheet(isPresented: $showGenre, content: {
                 GenresView(book: book)
             })
@@ -108,3 +150,89 @@ struct EditBookView: View {
     return EditBookView(book: Book.sampleBooks[3])
         .modelContainer(preview.continer)
 }
+
+
+
+
+// MARK: Important question about SwiftData @Bindable and @State
+/**
+ 
+ 🔹 What @Bindable does here
+ struct EditBookView: View {
+     @Bindable var book: Book
+ }
+
+
+ This means:
+
+ ✔ book is a SwiftData managed model
+ ✔ Changes are tracked by SwiftData
+ ✔ UI updates automatically
+ ✔ Changes are written back to the model context
+ ✔ Other views observing the same book update too
+
+ So when you write:
+
+ TextField("Title", text: $book.title)
+
+
+ You are editing the actual SwiftData object.
+
+ ❌ What happens if you use @State instead?
+ struct EditBookView: View {
+     @State var book: Book   // ❌ wrong for SwiftData models
+ }
+
+ This breaks the SwiftData data flow.
+
+ @State means:
+
+ "This view OWNS this value."
+
+ But your Book is owned by SwiftData, not the view.
+
+ Problems you will get
+ 1️⃣ State makes a copy of the reference
+
+ SwiftData tracks identity by model context.
+ @State stores a local reference that is no longer managed properly.
+
+ 2️⃣ Changes may not persist
+
+ SwiftData may not detect changes correctly:
+
+ book.title = "New Title"  // might not save properly
+
+ 3️⃣ Other views won't update
+
+ Other views observing the same Book won’t refresh because SwiftUI thinks it's local state.
+
+ 4️⃣ Previews and navigation may break
+
+ NavigationStack + SwiftData relies on identity tracking.
+ @State breaks that chain.
+
+ 🔹 Correct ownership pattern
+ Wrapper    Who owns the model?
+ @State    The view owns it
+ @Bindable    SwiftData owns it
+ @Query    SwiftData fetches it
+ @Environment(.modelContext)    SwiftData context
+ 🔹 When is @State allowed with models?
+
+ Only if the model is not SwiftData:
+
+ @Observable
+ class DraftBook {
+     var title = ""
+     var author = ""
+ }
+
+
+ Then:
+
+ @State private var draft = DraftBook()   // fine
+
+
+ But SwiftData @Model objects must never be @State.
+ */

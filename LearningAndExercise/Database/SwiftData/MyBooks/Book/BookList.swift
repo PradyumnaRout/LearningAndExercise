@@ -31,7 +31,11 @@ struct BookList: View {
             || book.author.localizedStandardContains(filterString)
             || filterString.isEmpty
         }
-        
+            
+        // Here _books is a stored one because now the books is not initialized yet so, it is a getonly property now.
+        // Because books is just a computed property backed by the wrapper — it doesn’t exist yet.
+        // But _books is the actual stored property.
+        // so when you write like this, You are replacing the entire query wrapper with a new one.
         _books = Query(filter: predicate, sort: sortDescriptor, animation: .bouncy)
     }
     
@@ -47,7 +51,24 @@ struct BookList: View {
                             EditBookView(book: book)
                         } label: {
                             HStack(spacing: 10) {
-                                book.icon
+                                VStack {
+                                    Group {
+                                        if let coverData = book.bookCover,
+                                           let uiImage = UIImage(data: coverData) {
+                                            Image(uiImage: uiImage)
+                                                .resizable()
+                                                .scaledToFill()
+                                        } else {
+                                            Image(systemName: "photo")
+                                                .resizable()
+                                                .scaledToFit()
+                                                .tint(.primary)
+                                        }
+                                    }
+                                    .frame(width: 35, height: 35)
+                                    .clipShape(Circle())
+                                    book.icon
+                                }
                                 VStack(alignment: .leading) {
                                     Text(book.title).font(.title2)
                                     Text(book.author).foregroundStyle(.secondary)
