@@ -1,6 +1,15 @@
 {
   "sourceLanguage" : "en",
   "strings" : {
+    "%@" : {
+
+    },
+    "%@ /" : {
+
+    },
+    "%@ min" : {
+
+    },
     "%lld of %lld" : {
       "localizations" : {
         "de" : {
@@ -68,6 +77,9 @@
       }
     },
     "0.0" : {
+
+    },
+    "5" : {
 
     },
     "Add" : {
@@ -481,6 +493,18 @@
         }
       }
     },
+    "Height: %lf" : {
+
+    },
+    "Height:: %lf" : {
+
+    },
+    "Hello" : {
+
+    },
+    "Hello Geometry" : {
+
+    },
     "Hello World" : {
       "localizations" : {
         "de" : {
@@ -530,6 +554,9 @@
           }
         }
       }
+    },
+    "Inbox" : {
+
     },
     "Item %lld" : {
       "localizations" : {
@@ -695,6 +722,9 @@
           }
         }
       }
+    },
+    "offsetTitle" : {
+
     },
     "OK" : {
       "localizations" : {
@@ -967,6 +997,15 @@
         }
       }
     },
+    "Singer Name" : {
+
+    },
+    "Song By" : {
+
+    },
+    "Song By: %@" : {
+
+    },
     "Sort" : {
       "localizations" : {
         "de" : {
@@ -1086,7 +1125,19 @@
         }
       }
     },
+    "Width: %lf" : {
+
+    },
+    "Width: %lld" : {
+
+    },
+    "Width:: %lf" : {
+
+    },
     "XXXX" : {
+
+    },
+    "y Position:: %lf" : {
 
     },
     "Year: " : {

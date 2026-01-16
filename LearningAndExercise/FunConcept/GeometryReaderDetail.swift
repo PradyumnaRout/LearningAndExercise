@@ -36,9 +36,6 @@ struct GeometryReaderAsView: View {
     }
 }
 
-#Preview {
-    OverlayGeometryReader()
-}
 
 
 // MARK: 2️⃣ GeometryReader in Background
@@ -225,3 +222,213 @@ struct OverlayGeometryReader: View {
  
  ➡️ This waits until layout stabilizes.
  */
+
+
+struct ExampleGeometryReader: View {
+    @State private var height: CGFloat = 0.0
+    @State private var width: CGFloat = 0.0
+    @State private var scollOffset: CGFloat = 0.0
+    
+    var body: some View {
+        ScrollView(.vertical) {
+            //MARK: You can place it to top for better offset change
+            /*
+            GeometryReader { geo in
+                Color.clear
+                    .onAppear {
+                        height = geo.size.height
+                        width = geo.size.width
+                        scollOffset = geo.frame(in: .named("scroll")).minY
+                    }
+                    .onChange(of: geo.frame(in: .named("scroll")).minY) { oldValue, newValue in
+                        scollOffset = geo.frame(in: .named("scroll")).minY
+                    }
+            }
+            .frame(height: 1)
+             */
+            
+            
+            VStack {
+                ForEach(0...20, id: \.self) { i in
+                    RoundedRectangle(cornerRadius: 20, style: .continuous)
+                        .fill(Color.cyan.opacity(0.3))
+                        .frame(height: 200)
+                }
+            }
+            .overlay(alignment: .top){
+                GeometryReader { geo in
+                    Color.clear
+                        .onChange(of: geo.frame(in: .named("scroll")).minY) { oldValue, newValue in
+                            height = geo.size.height
+                            width = geo.size.width
+                            scollOffset = geo.frame(in: .named("scroll")).minY
+                        }
+                }
+                .frame(height: 1)
+            }
+            .padding()
+        }
+        .coordinateSpace(name: "scroll")
+        .overlay {
+            VStack {
+                Text("Height:: \(height)")
+                Text("Width:: \(width)")
+                Text("y Position:: \(scollOffset)")
+            }
+            .foregroundStyle(.black)
+        }
+    }
+}
+
+
+#Preview {
+//    ExampleGeometryReader()
+    MyView()
+}
+
+
+// MARK: Global and Custom Coordinate Space
+struct CoordinateSpace: View {
+    var body: some View {
+//        GeometryReader { geo in
+//            Text("Hello")
+//                .onAppear {
+//                    print(geo.frame(in: .global))
+//                    // (x: 0.0, y: 62.0, width: 402.0, height: 778.0)
+//                }
+//        }
+        
+        
+        ScrollView {
+            VStack {
+                GeometryReader { geo in
+                    Text("Hello")
+                        .onAppear {
+                            print(geo.frame(in: .named("MoodSpace")))
+                            // (x: 0.0, y: 0.0, width: 402.0, height: 100.0)
+                        }
+                }
+                .frame(height: 100)
+            }
+        }
+        .coordinateSpace(name: "MoodSpace")
+    }
+}
+
+
+// MARK: SCROLL VIEW OFFSET READER
+//https://danielsaidi.com/blog/2023/02/06/adding-scroll-offset-tracking-to-a-swiftui-scroll-view
+
+enum ScrollOffsetNameSpace {
+    static let nameSpace = "scrollView"
+}
+
+struct ScrollOffsetPreferenceKeys: PreferenceKey {
+    static var defaultValue: CGPoint = .zero
+    
+    static func reduce(value: inout Value, nextValue: () -> Value) {
+//        value = nextValue()
+    }
+}
+
+
+struct ScrollViewOffsetTracker: View {
+    var body: some View {
+        GeometryReader { geo in
+            Color.clear
+                .preference(
+                    key: ScrollOffsetPreferenceKeys.self,
+                    value: geo.frame(in: .named(ScrollOffsetNameSpace.nameSpace))
+                        .origin
+                )
+        }
+        .frame(height: 0)
+    }
+}
+
+
+private extension ScrollView {
+    func withOffsetTracking(action: @escaping (_ offset: CGPoint) -> Void) -> some View {
+        self
+            .coordinateSpace(name: ScrollOffsetNameSpace.nameSpace)
+            .onPreferenceChange(ScrollOffsetPreferenceKeys.self, perform: action)
+    }
+}
+
+// We can now put things together by using the offset tracking view and the scroll extension:
+
+/*
+ ScrollView(.vertical) {
+     ZStack(alignment: .top) {
+         ScrollViewOffsetTracker()
+         // Insert scroll view content here
+     }
+ }
+ .withOffsetTracking(action: { print("Offset: \($0)") })
+ */
+
+// The offset is now continuously sent to the action as the scroll view is scrolled. You can use this to fade out content in the header, present additional views, etc.
+
+
+public struct ScrollViewWithOffset<Content: View>: View {
+
+    public init(
+        _ axes: Axis.Set = .vertical,
+        showsIndicators: Bool = true,
+        onScroll: ScrollAction? = nil,
+        @ViewBuilder content: @escaping () -> Content
+    ) {
+        self.axes = axes
+        self.showsIndicators = showsIndicators
+        self.onScroll = onScroll ?? { _ in }
+        self.content = content
+    }
+
+    private let axes: Axis.Set
+    private let showsIndicators: Bool
+    private let onScroll: ScrollAction
+    private let content: () -> Content
+
+    public typealias ScrollAction = (_ offset: CGPoint) -> Void
+
+    public var body: some View {
+        ScrollView(axes, showsIndicators: showsIndicators) {
+            ZStack(alignment: .top) {
+                ScrollViewOffsetTracker()
+                content()
+            }
+        }
+        .withOffsetTracking(action: onScroll)
+    }
+}
+
+// You can then just use ScrollViewWithOffset instead of having to specify all required components every time you want to use offset tracking:
+
+struct MyView: View {
+
+    @State
+    private var scrollOffset: CGPoint = .zero
+    
+    var body: some View {
+        NavigationView {
+            ScrollViewWithOffset(onScroll: handleScroll) {
+                LazyVStack {
+                    ForEach(1...100, id: \.self) { _ in
+                        Divider()
+                        RoundedRectangle(cornerRadius: 10)
+                            .fill(Color.red.opacity(0.2))
+                            .frame(height: 100)
+                    }
+                }
+            }.navigationTitle("offsetTitle")
+                .overlay {
+                    Text("\(self.scrollOffset)")
+                }
+        }
+    }
+
+    func handleScroll(_ offset: CGPoint) {
+        self.scrollOffset = offset
+        print("Offset:: \(offset)")
+    }
+}
