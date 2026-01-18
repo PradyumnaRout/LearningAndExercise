@@ -813,7 +813,9 @@ Protocol → declares what must exist
 Extension → defines how it works by default
 
 ✅ So it is not mandatory for a class (or struct) to redeclare the method if the protocol provides a default implementation in an extension.
- 
+And by using this you can make your protocol method optional like objective c, Because now you do not need to add the declare the mentod
+in the conforming type. But you can if you want, so in other word you can say it otpional method.
+
  ✅✅✅ First: What does “dispatch” mean? ✅✅✅
 
  Dispatch = how Swift decides which function to call at runtime.
