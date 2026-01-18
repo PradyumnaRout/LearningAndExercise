@@ -180,6 +180,15 @@ import Foundation
      }
  }
 
+Mutating function in class:- 
+class Fan: Togglable {
+    var isOn = false
+
+    func toggle() {
+        isOn.toggle()
+    }
+}
+
  
  `🧩 3. Initializer Requirements
 
@@ -768,8 +777,42 @@ Protocol extensions CANNOT:
 
 
  ➡️ Person didn’t implement sayHello(), but still works because extension provided implementation.
- 
- 
+
+ ✅✅ Example of protocol Extension - 
+protocol Flyable {
+    func fly()  // Requirement
+}
+
+extension Flyable {
+    func fly() {      // Default Implementation.
+        print("Flying...")
+    }
+}
+
+Question : Here can I wtire fly() in both requirement and extension
+
+You can declare fly() in the protocol and provide its default implementation in the protocol extension.
+
+What does that menas : - 
+- Any type that conforms to Flyable automatically gets this fly() behavior.
+- A conforming type may override it with its own implementation.
+
+Example override:
+struct Bird: Flyable {
+    func fly() {
+        print("Bird flying 🐦")
+    }
+}
+
+
+Default Use - 
+struct Plane: Flyable { }  // uses default fly()
+
+So yes — you write it in both places:
+Protocol → declares what must exist
+Extension → defines how it works by default
+
+✅ So it is not mandatory for a class (or struct) to redeclare the method if the protocol provides a default implementation in an extension.
  
  ✅✅✅ First: What does “dispatch” mean? ✅✅✅
 
