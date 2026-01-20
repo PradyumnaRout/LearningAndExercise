@@ -132,3 +132,188 @@ testCl.performSubtraction()
 // What are escaping closure
 // Escaping closre will remain in memory after the function from which they gets called finish execution. Generally used in API calls where code is running asynchronously and execution time is unknown.
 
+
+
+//MARK: Defer in iOS
+// Defer statement is used for executing code just
+// before transforming program control outside the scope
+// that the defer statement appears in.
+
+
+var value = 0
+@MainActor
+func understandDefer() -> Int {
+    defer{
+        value = value + 1
+    }
+    return value
+}
+
+
+print(understandDefer)      // 0
+print(value)                // 1
+
+
+// On return the control exist the function scope,
+// And just before that the value increases.
+// That is why the function returns 0, but the value is 1.
+// So defer will execute at the end of the loop.
+
+
+
+
+func interViewQuestion() {
+    print("Step 1")
+    defer {
+        print("Step 2")
+    }
+    print("Step 3")
+}
+
+
+// Output -
+// Step 1
+// Step 3
+// Step 2
+
+
+func multipleDefer() {
+    print("Step 1")
+    // First Defer
+    defer {
+        print("Step 2")
+    }
+    // Second defer
+    defer{
+        print("Step 4")
+    }
+    // Third defer
+    defer {
+        print("Step 5")
+    }
+    print("Step 3")
+}
+
+
+multipleDefer()
+// Remember one thing that defer execute in the algo of
+// First In Last Out, so the last one will execution First
+
+
+// Output
+// Step 1
+// Step 3
+// Step 5
+// Step 4
+// Step 2
+
+
+
+
+// Nested Defer:
+func nestedDefer() {
+    print("Step 1")
+    // First Defer
+    defer {
+        print("Step 2")
+    }
+    // Second defer
+    defer{
+        defer{
+            print("Step 6")
+        }
+        print("Step 4")
+    }
+    // Third defer
+    defer {
+        print("Step 5")
+    }
+    print("Step 3")
+}
+print("Otput of Nested Defer")
+nestedDefer()
+// Output - Step 1, Step 3, Step 5, Step 4, Step 6, Step 2
+
+
+//MARK: - Let Vs Var Performance , Static vs Class function:
+// Let Vs Var in struct
+struct AppDeveloperStruct {
+    var technology: String
+    let videos: Int
+}
+
+
+let app1 = AppDeveloperStruct(technology: "iOS", videos: 1)
+// app1 is immutable and as it is an instance of value type
+// the instance is also immutable so the the below two line will
+// get errors even if technology is mutable. It will also get an error.
+app1.technology = "Flutter"
+app1.videos = 10
+
+
+
+
+var app2 = AppDeveloperStruct(technology: "iOS", videos: 1)// Mutable
+// the app2 is mutable as it is var but the videos is immutable so it will give error
+app2.technology = "Android" // mutable
+app2.videos = 5 // Immutable
+
+
+
+
+// Let Vs Var in Class
+class AppDeveloperClass {
+    var technology: String
+    let videos: Int
+
+
+    init(technology: String, videos: Int) {
+        self.technology = technology
+        self.videos = videos
+    }
+}
+
+
+let app1 = AppDeveloperClass(technology: "iOS", videos: 1)
+// app1 is immutable,but as  AppDeveloperClass is reference type so
+// technology change will not cause error.
+app1.technology = "Flutter"
+app1.videos = 10    // Only videos will give error as it is let(Immutable)
+
+
+var app2 = AppDeveloperClass(technology: "iOS", videos: 1)// Mutable
+// the app2 is mutable as it is var
+app2.technology = "Android" // mutable
+app2.videos = 5 // Immutable, will cause error.
+
+
+
+// Static Vs Class
+class Sample {
+    func test() {
+
+
+    }
+    // Static dispatch
+    static func test2() {
+
+
+    }
+    // Dynamic Dispatch
+    class func test3() {
+
+
+    }
+}
+// Static functions can not be inherited while class functions can be
+class Sample2: Sample {
+    override func test() {
+
+
+    }
+    // Class function can be overridden.
+    override func test3() {
+
+
+    }
+}

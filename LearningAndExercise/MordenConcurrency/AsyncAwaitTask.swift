@@ -23,7 +23,7 @@ import SwiftUI
  • don’t block the current thread
  
  
- Question - even if we do not execute async async function inside Task block it will run it asynchronously.
+ Question - even if we do not execute  async function inside Task block it will run it asynchronously.
  
  Yes — exactly 👍
  Even if you don’t call any async function inside a Task block, the code still runs asynchronously.
@@ -127,25 +127,6 @@ import SwiftUI
  • Cleaner and safer
 
  ✔ Preferred when possible
-
- 🔹 Option 3: Suspension via Task.yield()
- func taskTwoAsync() async {
-     for i in 0...10 {
-         print("Inside async task:: ➡️ \(i)")
-         await Task.yield()
-     }
- }
-
- Task {
-     await taskTwoAsync()
-     for i in 11...20 {
-         print("Outside task:: ➡️ \(i)")
-     }
- }
-
-
- ✔ Allows interleaving
- ❌ Still not parallel
 
  2️⃣ Task.yield() vs await (CRITICAL difference)
 

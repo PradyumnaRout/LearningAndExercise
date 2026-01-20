@@ -363,7 +363,7 @@ class AsyncLetChildTaks {
             async let name = fetchName()
             async let age = fetchAge()
             
-            // We can await then in any order
+            // We can await them in any order
             let n = await name      // returns as soon as fetchName() finishes (≈1s)
             print("Got Name: \(n)")
             
