@@ -17,11 +17,12 @@ struct LearningAndExerciseApp: App {
 
     var body: some Scene {
         WindowGroup {
+            PracticeConcurrency()
 //            BookListView()
-            SongsListView()
+//            SongsListView()
 //            SwiftDataServiceView()
         }
-        .modelContainer(container)
+//        .modelContainer(container)
 //        .modelContainer(for: Book.self)
 //        .modelContainer(for: [User.self, Company.self])   // can also allow multiple model.
     }

@@ -62,157 +62,369 @@ import Foundation
  You can think actor a serial executer for its data.
  */
 
-/// `Here, even if multiple concurrent tasks call increment(), the actor ensures that updates to value happen safely.
-actor ActorCounter {
-    private var value = 0
+// 🔷 Data Race in class
+/**
+ ● Two Task {} blocks run asynchronously on different threads.
+ ● Both may call classObj.increment() at the same time.
+ ● Meanwhile, you immediately call getValue() without waiting for the tasks to finish.
+
+ ● `This isn't deadlock; it's unsynchronized concurrent access to shared data, leading to:
+ ✅ No thread waiting forever → no deadlock.
+ ⚠️ Possible incorrect result (0, 1, or 2) → data race.
+ ❌ No guarantee both increments finish before reading value.
+ */
+
+
+//MARK: EXAMPLE DATA RACES::::::
+// MARK: - Data Races
+// MARK: Actor - Only one thead can access its multiple states at a time.
+
+
+// MARK: Counter Actor Data Races
+// MARK: Example: 1, Solve Data races
+actor CounterActor {
+    var counter = 0
     
-    func increment() {
-        value += 1
+    func increaseByOne() {
+        counter += 1
     }
     
-    func getValue() -> Int {
-        return value
+    func decreaseByOne() {
+        counter -= 1
     }
 }
 
-class ClassCounter {
-    private var value = 0
+class CounterDataRacesExecution {
+    var counterObj = CounterActor()
     
-    func increment() {
-        value += 1
-    }
-    
-    func getValue() -> Int {
-        return value
-    }
-}
-
-//👉 Test data races: Unsynchronized concurrent access to shared data.
-class TestDataRaces {
-    var actorObj = ActorCounter()
-    var classObj = ClassCounter()
-    
-    let concurrentqueue = DispatchQueue.global()  // Concurrent queue
-    private let serialQueue = DispatchQueue(label: "com.example.safeQueue") // Serial
-    
-    // 🔷 Data Race in class
-    /**
-     ● Two Task {} blocks run asynchronously on different threads.
-     ● Both may call classObj.increment() at the same time.
-     ● Meanwhile, you immediately call getValue() without waiting for the tasks to finish.
-
-     ● `This isn't deadlock; it's unsynchronized concurrent access to shared data, leading to:
-     ✅ No thread waiting forever → no deadlock.
-     ⚠️ Possible incorrect result (0, 1, or 2) → data race.
-     ❌ No guarantee both increments finish before reading value.
-     */
-    // Data race using Task{}
-    func testClassDataRace() {
-        Task {
-            classObj.increment()
-        }
-        
-        Task {
-            classObj.increment()
-        }
-        
-        let result = classObj.getValue()
-        print(result)       // Possibel outcome - (0, 1, or 2)
-    }
-    
-    // Data race uisng dispatchqueue
-    func testRaceCondition() {
-        for _ in 0..<10000 {
-            concurrentqueue.async { [weak self] in
-                self?.classObj.increment()    // ⚠ Multiple threads writing to 'value' at same time
-            }
-        }
-        
-        // Give some time for tasks to finish (not perfect but demonstrates the issue)
-        concurrentqueue.asyncAfter(deadline: .now() + 1, execute: {[weak self] in
-            print("Final value: \(String(describing: self?.classObj.getValue()))")
-        })
-    }
-    
-    // ✅ Concurrent queues can run multiple tasks at once But only if multiple tasks are already in the queue
-    func dataRaceUsingConcurrentQueue() {
-        
-        // It will execute concurrently with the below sync block because it is already in the queue.
-        concurrentqueue.async {
-            for i in 1...3 {
-                print("Async Task 1 -> \(i)")
-                self.classObj.increment()
-            }
-        }
-
-        concurrentqueue.sync {
-            for i in 1...3 {
-                print("Sync Task   -> \(i)")
-                self.classObj.increment()
-            }
-        }
-
-        // will execute after the execution of above to queue.
-        concurrentqueue.async {
-            for i in 1...3 {
-                print("Async Task 2 -> \(i)")
-                self.classObj.increment()
-            }
-        }
-        
-        concurrentqueue.sync {
-            print("Enter to get value")
-            print("counter value :: \(self.classObj.getValue())")
-        }
-    }
-    
-    
-    /// 🖍️ `Even though you're using async, when tasks are submitted to a serial queue, they are still executed one after another, in order.
-    func solveDataRace() {
-        for _ in 0..<1000 {
-            serialQueue.async {
-                print("Enter to increment")
-                self.classObj.increment()
-            }
-        }
-        
-        serialQueue.async {
-            print("Enter to get value")
-            print("counter value :: \(self.classObj.getValue())")
-        }
-    }
-    
-    
-    
+    // The operation counter += 1 is actually:
+    // Read counter
+    // Add 1
+    // Write back
+    // If two threads do this simultaneously, updates get lost.
+    // and you can get 1372, 1583, 1897 like that. And that is data race.
+    // But in case of actor you will always find 2000, because actor solves data races.
     // 🔷 Data Race in Actor: Actor manages data reaces by default
-    /// `Actors prevent data races, but they do NOT wait for tasks created by Task {} blocks.
-    func dataRaceInActor() async {
+    func operations() {
         Task {
-            await actorObj.increment()
+            for _ in 0..<1000 {
+                await counterObj.increaseByOne()   // write
+            }
         }
-
+        
         Task {
-            await actorObj.increment()
+            for _ in 0..<1000 {
+                await counterObj.increaseByOne()   // write
+            }
         }
-
-        Task {
-            await actorObj.increment()
-        }
-
-        let result = await actorObj.getValue()
-        print(result) // ❌ Likely prints 0 or 1, not 3
     }
     
-    func solveDataRaceInActor() async {
-        await actorObj.increment()
-        await actorObj.increment()
-        await actorObj.increment()
+    func getValue() {
+        Task {
+            print("Total Value: \(await counterObj.counter)")
+        }
+    }
+    
+    /// `Actors prevent data races, but they do NOT wait for tasks created by Task {} blocks.
+    func taskScheduleInActor() async {
+        Task {
+            await counterObj.increaseByOne()
+        }
         
-        let result = await actorObj.getValue()
+        Task {
+            await counterObj.increaseByOne()
+        }
+        
+        Task {
+            await counterObj.increaseByOne()
+        }
+        
+        let result = await counterObj.counter
+        print(result) // ❌ Likely prints 0 or 1, not 3. This is not data races, it is just task sheduling.
+    }
+    
+    func solveTaskSheduceInActor() async {
+        await counterObj.increaseByOne()
+        await counterObj.increaseByOne()
+        await counterObj.increaseByOne()
+        
+        let result = await counterObj.counter
         print(result)
     }
-    
 }
+
+
+
+
+//MARK:  Example: 2 Solve Data Race
+actor AccountBalanceActor {
+    var availableBalance: Int = 100
+        
+    func deposit(_ amount: Int) {
+        availableBalance += amount
+    }
+    
+    func withdraw(_ amount: Int) async -> Bool {
+        // Even if you sleep it, the races will never happen like in shared case.
+        try? await Task.sleep(nanoseconds: 200_000_000)
+        if availableBalance >= amount {
+            availableBalance -= amount
+            return true
+        }
+        
+        return false
+    }
+    
+    func balanceCheck() -> Int {
+        availableBalance
+    }
+    
+    func resetBalance() {
+        availableBalance = 100
+    }
+}
+
+class CustomerDataRacesOnActor {
+    var holderOne = AccountBalanceActor()
+    
+    func operations() {
+        Task {
+            print("Holder One :: \(await holderOne.withdraw(70))")
+        }
+        
+        Task {
+            print("Holder One2 :: \(await holderOne.withdraw(80))")
+        }
+    }
+    
+    func getValue() {
+        Task {
+            print("Available Balance is :\(await holderOne.balanceCheck())")
+            await holderOne.resetBalance()
+        }
+    }
+}
+
+
+
+
+
+// MARK: Example: 3 (Creating Data Races In Actor through shared object)
+actor AccountBalanceActor2 {
+    static var availableBalance: Int = 100
+        
+    func deposit(_ amount: Int) {
+        AccountBalanceActor2.availableBalance += amount
+    }
+    
+    func withdraw(_ amount: Int) async -> Bool {
+        // This is a data races because you are accessing a shared instance availableBalance from multiple task. May be you will never get both true because may be your system scheduling handling this, but still it is a data race. To forcefully produce it, uncomment the sleep.
+        // When you uncomment it, you will see the data races happens. But still you can stop is by uncommenting the inner sleep and commenting the outer sleep. That will solve your data races, But the correct approach should not to use shared object like static or class.
+        try? await Task.sleep(nanoseconds: 200_000_000)
+        if AccountBalanceActor2.availableBalance >= amount {
+            AccountBalanceActor2.availableBalance -= amount
+//            try? await Task.sleep(nanoseconds: 200_000_000)
+            return true
+        }
+        return false
+    }
+    
+    func balanceCheck() -> Int {
+        AccountBalanceActor2.availableBalance
+    }
+}
+
+class CustomerDataRacesOnActor2 {
+    var holderOne = AccountBalanceActor2()
+    var holderTwo = AccountBalanceActor2()
+    
+    func operations() {
+        Task {
+            print("Holder One :: \(await holderOne.withdraw(80))")
+        }
+        
+        Task {
+            print("Holder Two :: \(await holderTwo.withdraw(70))")
+        }
+    }
+    
+    func getValue() {
+        AccountBalanceActor2.availableBalance = 100
+        print("Available Balance is :\(AccountBalanceActor2.availableBalance)")
+    }
+}
+
+
+
+
+// MARK: Now Start data races in class
+// Creating Data Races
+class CounterClass {
+    var value = 0
+    
+    func increaseByOne() {
+//        sleep(2)
+        value += 1
+    }
+    
+    func getValue() -> Int {
+        return value
+    }
+}
+
+class CounterClassDataRacesExecution {
+    let concurrentQueue = DispatchQueue.global()
+    let serialQueue = DispatchQueue(label: "serial_queue")
+    var objCounter = CounterClass()
+    
+    func operations() {
+        // MARK: Concurrent Queue Exection Using Task,
+        // MARK: ⚠ Multiple threads writing to 'value' at same time
+        // MARK:  Execution: 1 (Task)
+        /*
+        Task {
+            for _ in 0..<1000 {
+                 objCounter.increaseByOne()   // write
+            }
+        }
+        
+        Task {
+            for _ in 0..<1000 {
+                 objCounter.increaseByOne()   // write
+            }
+        }
+         */
+        
+        
+        // MARK: Executin: 2 (Dispatch queue)
+        /*
+        // Remember🧠: Concurrent queues can run multiple tasks at once But only if multiple tasks are already in the queue
+                
+        concurrentQueue.async {
+            // It will execute concurrently with the below sync block because it is already in the queue.
+            for _ in 1...1000 {
+//                print("Async Task 1")
+                self.objCounter.increaseByOne()
+            }
+        }
+        
+        concurrentQueue.sync {
+            for _ in 1...1000 {
+//                print("Sync Task")
+                self.objCounter.increaseByOne()
+            }
+        }
+        
+        
+//         will execute after the execution of above to queue.
+        concurrentQueue.async {
+            for _ in 1...1000 {
+//                print("Async Task 2")
+                self.objCounter.increaseByOne()
+            }
+        }
+         */
+        
+        
+        
+        // MARK: Execution: 3 (Dispatch queue)
+        /*
+        concurrentQueue.async {
+            for _ in 0..<1000 {
+                self.objCounter.increaseByOne()   // write
+            }
+        }
+
+        concurrentQueue.async {
+            for _ in 0..<1000 {
+                self.objCounter.increaseByOne()   // write
+            }
+        }
+         */
+        
+        
+        
+        // MARK: Execution: 4 (Dispatch queue Using Serial Queue)
+        /*
+        /// 🖍️ `Even though you're using async, when tasks are submitted to a serial queue, they are still executed one after another, in order.
+        
+        serialQueue.async {
+            for _ in 0..<1000 {
+                self.objCounter.increaseByOne()
+            }
+        }
+        
+        for _ in 0..<1000 {
+            serialQueue.async {
+//                print("Enter to increment")
+                self.objCounter.increaseByOne()
+            }
+        }
+         */
+        
+        
+        
+        // MARK: Execution: 5 (Dispatch queue Using Concurrent Queue)
+        concurrentQueue.async {
+            for _ in 0..<1000 {
+                self.objCounter.increaseByOne()
+            }
+        }
+
+        for _ in 0..<1000 {
+            concurrentQueue.async {
+                self.objCounter.increaseByOne()
+            }
+        }
+
+    }
+    
+    func getValue() {
+        // Execution: 1
+        /*
+        // Here you may expect the values to be 2000 but when you execute it you will get values like
+        // 1935, 1959, 1969, 1952  etc, That is because of data races. That multiple resouces, threads are writing to the same object at the same time.
+        print("Total Value: \(objCounter.getValue())")
+        objCounter.value = 0
+         */
+        
+        
+        // Execution: 2
+        /*
+        // In the Execution 2 It has an sync block at the middle, it will execute the previous async block with it concurrently. And the last async block will execute after the sync block completes its execution. so you will always get total value less than 3000
+        // One more important thing is, If you want to see data races then remove print statement becasue, print it self do synchronous work, so with the presence of print you may see whole correct value every time.😂
+        
+        print("Total Value: \(objCounter.getValue())")
+        objCounter.value = 0
+         */
+        
+        
+        
+        // Execution: 3
+        /*
+        // Here alos you will get value less than 2000
+        print("Total Value: \(objCounter.getValue())")
+        objCounter.value = 0
+         */
+        
+        
+        // Execution: 4
+        /*
+        // Here you will always get 2000 because of the serial queue.
+        print("Total Value: \(objCounter.getValue())")
+        objCounter.value = 0
+         */
+        
+        
+        // Execution 5
+        // Here you will always get 2000 because of the serial queue. Even if you chnage the place of the queue execution.
+        print("Total Value: \(objCounter.getValue())")
+        objCounter.value = 0
+    }
+}
+
+
+
 
 
 // ➡️ Here’s an example of a thread-safe (data race–free) class in Swift using a serial dispatch queue to synchronize access to shared state:
@@ -321,6 +533,237 @@ class DataManagerExecution {
         }
     }
 }
+
+// MARK: Solving Data Races in Class::::
+// Creating a Thread safe synchronous counter class
+class ThreadSafeCounter {
+    private let queue = DispatchQueue.init(label: "serial_dispatch_queue")
+    private var counter: Int = 0
+    
+    func increaseByOne() {
+        queue.sync {
+            counter += 1
+        }
+    }
+    
+    func decreaseByOne() {
+        queue.sync {
+            counter -= 1
+        }
+    }
+    
+    func getValue() {
+        queue.sync {
+            print("Counter value:: \(counter)")
+            
+            counter = 0
+        }
+    }
+}
+
+
+// MARK: Thread Safe Shared Singleton
+class ThreadSafeSharedSingleton {
+    private let queue = DispatchQueue.init(label: "serial_dispatch_queue_singleton")
+    static let shared = ThreadSafeSharedSingleton()
+    
+    private init() {}
+    
+    private var counter: Int = 0
+    
+    func increaseByOne() {
+        queue.sync {
+            counter += 1
+        }
+    }
+    
+    func decreaseByOne() {
+        queue.sync {
+            counter -= 1
+        }
+    }
+    
+    func getValue() {
+        queue.sync {
+            print("Counter value:: \(counter)")
+            
+            counter = 0
+        }
+    }
+}
+
+class SolveDataRaceExecutor {
+    let concurrentQueue = DispatchQueue.global()
+    var obj = ThreadSafeCounter()
+    
+    func operations() {
+        
+        // Execution: 1
+        /*
+        concurrentQueue.async {
+            for _ in 1...1000 {
+                self.obj.increaseByOne()
+            }
+        }
+        
+        concurrentQueue.async {
+            for _ in 1...1000 {
+                self.obj.increaseByOne()
+            }
+        }
+         */
+        
+        
+        // Execution: 2
+        /*
+        for _ in 1...1000 {
+            concurrentQueue.async {
+                self.obj.increaseByOne()
+            }
+        }
+        
+        concurrentQueue.async {
+            for _ in 1...1000 {
+                self.obj.increaseByOne()
+            }
+        }
+         */
+        
+        
+        // Execution: 3
+        /*
+        Task {
+            await withTaskGroup { group in
+                for _ in 1...1000 {
+                    group.addTask {
+                        self.obj.increaseByOne()
+                    }
+                }
+            }
+        }
+        
+        Task {
+            for _ in 1...1000 {
+                self.obj.increaseByOne()
+            }
+        }
+         */
+        
+        
+        // Execution: 4
+        // Data Manager Execution singleton Thread safe.
+        concurrentQueue.async {
+            for _ in 1...1000 {
+                ThreadSafeSharedSingleton.shared.increaseByOne()
+            }
+        }
+        
+        concurrentQueue.async {
+            for _ in 1...1000 {
+                ThreadSafeSharedSingleton.shared.increaseByOne()
+            }
+        }
+    }
+    
+    func getValue() {
+        // Always get the full corrected value because the object itself is coming form a synchronous/serial context.
+//        obj.getValue()
+        ThreadSafeSharedSingleton.shared.getValue()
+    }
+}
+
+
+
+actor CounterActorSharedResouces {
+    static var counter = 0
+    
+    func increaseByOne() {
+        CounterActorSharedResouces.counter += 1
+    }
+    
+    func decreaseByOne() {
+        CounterActorSharedResouces.counter -= 1
+    }
+    
+    static func getValue() {
+        print("Value:: \(CounterActorSharedResouces.counter)")
+        CounterActorSharedResouces.counter = 0
+    }
+}
+
+class CounterActorSharedResoucesExecutor {
+    let counterObj1 = CounterActorSharedResouces()
+    let counterObj2 = CounterActorSharedResouces()
+    
+    func operations() {
+        // Here you will always get values less than 2000 as we are using two different object here
+        Task {
+            for _ in 0..<1000 {
+                await counterObj1.increaseByOne()   // write
+            }
+        }
+        
+        Task {
+            for _ in 0..<1000 {
+                await counterObj2.increaseByOne()   // write
+            }
+        }
+    }
+    
+    func getValue() {
+        CounterActorSharedResouces.getValue()
+    }
+}
+
+
+actor CounterActorSharedResoucesSingleton {
+    static let shared = CounterActorSharedResoucesSingleton()
+    private var counter = 0
+    
+    
+    func increaseByOne() {
+        counter += 1
+    }
+    
+    func decreaseByOne() {
+        counter -= 1
+    }
+    
+    func getValue() -> Int {
+        return counter
+    }
+    
+    func reset() {
+        counter = 0
+    }
+}
+
+class CounterActorSharedResoucesExecutorSingleton {
+    private let obj = CounterActorSharedResoucesSingleton.shared
+    func operations() {
+        // Here you will always get values less than 200
+        Task {
+            for _ in 0..<1000 {
+                await obj.increaseByOne()   // write
+            }
+        }
+        
+        Task {
+            for _ in 0..<1000 {
+                await obj.increaseByOne()   // write
+            }
+        }
+    }
+    
+    func getValue() {
+        // Always get 2000 as it is a single object.
+        Task {
+            print("Value:: \(await obj.getValue())")
+            await obj.reset()
+        }
+    }
+}
+
 
 // Using Dispatch Semaphore
 final class SemaphoreCounter {

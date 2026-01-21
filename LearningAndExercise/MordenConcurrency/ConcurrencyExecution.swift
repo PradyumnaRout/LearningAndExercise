@@ -15,14 +15,14 @@ class GlobalConcurentQueueExperiment {
     /// Assigning task to multiple Global Queue with different Quality Of Service, And let's see which one's execution complete first
     func testMultipleQOS() {
         // QOS - background
-        DispatchQueue.global(qos: .background).sync {
+        DispatchQueue.global(qos: .background).async {
             for i in 11...20 {
                 print(i)
             }
         }
         
         // QOS - userInteractive
-        DispatchQueue.global(qos: .userInteractive).sync {
+        DispatchQueue.global(qos: .userInteractive).async {
             for i in 1...10 {
                 print(i)
             }
@@ -375,7 +375,7 @@ class DispatchGroupExecution {
             print("After leaving the task Two")
         }
         
-        // it manages enter and leave by itself
+        // it manages enter and leave by itself because you are passing dispatchGroup in group parameter
         customQueue.async(group: dispatchGroup) {
             if Thread.isMainThread {
                 print("Task 3 :: Running in main thread")
@@ -388,22 +388,22 @@ class DispatchGroupExecution {
         }
         
         // Notify when all tasks are completed
-//        dispatchGroup.notify(queue: .main) {
-//            print("All tasks are finished. Display the results here.")
-//        }
+        dispatchGroup.notify(queue: .main) {
+            print("All tasks are finished. Display the results here.")
+        }
         
         // Wait for the all the task to complete
         // This will block the current thread until all tasks are completed
 //        dispatchGroup.wait()
         
-        let timeoutResult = dispatchGroup.wait(timeout: .now() + 0.2)
-        
-        switch timeoutResult {
-        case .success:
-            print("Success")
-        case .timedOut:
-            print("Time out")
-        }
+//        let timeoutResult = dispatchGroup.wait(timeout: .now() + 0.2)
+//        
+//        switch timeoutResult {
+//        case .success:
+//            print("Success")
+//        case .timedOut:
+//            print("Time out")
+//        }
         
         print("It does not block the current thread")
         
@@ -1512,3 +1512,6 @@ class PrintNumberOperation: AsyncOperation {
         }
     }
 }
+
+
+

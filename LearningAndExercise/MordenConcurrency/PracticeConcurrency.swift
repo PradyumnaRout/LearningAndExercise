@@ -9,10 +9,26 @@ import SwiftUI
 
 struct PracticeConcurrency: View {
     
-    var obj = TaskGroupExecutionViewModel()
+    var obj = DispatchGroupExecution()
     
     var body: some View {
-        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
+        VStack {
+            Button {
+                obj.groupWithNotify()
+//                obj.operations()
+            } label: {
+                Text("Start")
+            }
+            .buttonStyle(.borderedProminent)
+            
+            Button {
+//                obj.getValue()
+            } label: {
+                Text("Get Value")
+            }
+            .buttonStyle(.borderedProminent)
+        }
+
     }
 }
 
@@ -423,6 +439,14 @@ class TaskGroupExecutionViewModel {
         }
     }
     
+    func fetchDataThreeWithThrow() async throws {
+        for i in 11...20 {
+            try Task.checkCancellation()
+            try await Task.sleep(nanoseconds: 2_000_000_000)
+            print("☺️ fetchDataThree :: \(i)")
+        }
+    }
+    
     func asyncLetExecution_cancelAfterDelayWithThrow() async {
         let parent = Task {
             async let value1 = try fetchDataOneWithThrow()
@@ -436,8 +460,22 @@ class TaskGroupExecutionViewModel {
             }
         }
         
+        
+        // It will succeed as we are only cancelling parent task.
+        Task {
+            async let value1 = try fetchDataThreeWithThrow()
+            
+            do {
+                let _ = try await value1
+                print("Third fetch datat Succeed✅")
+            } catch {
+                print("Third fetch datat cancelled")
+            }
+        }
+        
         // Wait a bit, then cancel so you can see some child output first
         try? await Task.sleep(nanoseconds: 3_000_000_000)
         parent.cancel()
     }
 }
+

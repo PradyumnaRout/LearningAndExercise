@@ -483,6 +483,9 @@
         }
       }
     },
+    "Get Value" : {
+
+    },
     "Go to detail" : {
       "localizations" : {
         "de" : {
@@ -1015,6 +1018,9 @@
           }
         }
       }
+    },
+    "Start" : {
+
     },
     "Starting Shpae: %@" : {
       "localizations" : {

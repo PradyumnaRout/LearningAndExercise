@@ -131,16 +131,13 @@ import Foundation
  ❌ Task cancelled
  ✔️ Final Summary
  Without error handling → prints:
- nginx
- Copy code
+
  Fetched 0
  Fetched 1
  Cancelling...
  Then silently stops because of a thrown cancellation error.
 
  With error handling → prints:
- arduino
- Copy code
  Fetched 0
  Fetched 1
  Cancelling...
@@ -219,7 +216,6 @@ struct CancellationAndErrorHandling {
 
 // 🔹 Real-World SwiftUI Example: Search with Cancellation
 import SwiftUI
-
 struct SearchView: View {
     
     @State private var query = ""
@@ -235,6 +231,7 @@ struct SearchView: View {
                         do {
                             let reuslt = try await performSearch(newValue)
                             results.append(reuslt)
+                            print("Search success")
                         } catch is CancellationError {
                             print("🔎 Search cancelled")
                         } catch {
@@ -247,11 +244,13 @@ struct SearchView: View {
                 Text(item)
             }
         }
+        .padding()
     }
     
     func performSearch(_ query: String) async throws -> String {
         try Task.checkCancellation()
         try await Task.sleep(nanoseconds: 1_000_000_000)
+        // IT will return after successfull wait for 1 second.Before that if you enter another character it will cancel the previous task.
         if query.isEmpty { return "" }
         return query
     }
