@@ -9,13 +9,12 @@ import SwiftUI
 
 struct PracticeConcurrency: View {
     
-    var obj = DispatchGroupExecution()
+    var obj = PracticeConcurrencyViewModel()
     
     var body: some View {
         VStack {
             Button {
-                obj.groupWithNotify()
-//                obj.operations()
+                obj.operations()
             } label: {
                 Text("Start")
             }
@@ -23,6 +22,7 @@ struct PracticeConcurrency: View {
             
             Button {
 //                obj.getValue()
+//                obj.resetBalance()
             } label: {
                 Text("Get Value")
             }
@@ -45,8 +45,16 @@ class PracticeConcurrencyViewModel {
     
     // Init
     init() {
-        foo9()
+//        foo9()
     }
+    
+    func operations() {
+        print("Hello Guys")
+        foo1()
+        
+        print("Scond print statement ===========")
+    }
+    
     
     //MARK:  Task -
     // Creates an asynchronous context
@@ -479,3 +487,70 @@ class TaskGroupExecutionViewModel {
     }
 }
 
+
+class PredictTheOutput {
+    func operations1() {
+        let queue = DispatchQueue(label: "printNumbers")
+        var numbers: String = ""
+        
+        for i in 50...55 {
+            numbers += "\(i) "
+        }
+        
+        print(numbers)
+        
+        queue.async {
+            var numbers: String = ""
+            for i in 10...15 {
+                numbers += "\(i) "
+            }
+            print(numbers)
+        }
+        
+        queue.async {
+            var numbers: String = ""
+            for i in 0...5 {
+                numbers += "\(i) "
+            }
+            print(numbers)
+        }
+        
+        numbers = ""
+        for i in 30...35 {
+            numbers += "\(i) "
+        }
+        print(numbers)
+    }
+    
+    func operations() {
+        let queue = DispatchQueue(label: "printNumbers", attributes: .concurrent)
+        var numbers: String = ""
+        
+        for i in 50...55 {
+            numbers += "\(i) "
+        }
+        print(numbers)
+        
+        queue.async {
+            var numbers: String = ""
+            for i in 10...15 {
+                numbers += "\(i) "
+            }
+            print(numbers)
+        }
+        
+        queue.async {
+            var numbers: String = ""
+            for i in 0...5 {
+                numbers += "\(i) "
+            }
+            print(numbers)
+        }
+        
+        numbers = ""
+        for i in 30...35 {
+            numbers += "\(i) "
+        }
+        print(numbers)
+    }
+}
