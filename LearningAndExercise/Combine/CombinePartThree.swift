@@ -19,7 +19,7 @@ import Combine
  
  In other words subscribers decide what to do with data once it is published.
  
- Formally a Subscriber Conforms to the Sibscriber Protocol.
+ Formally a Subscriber Conforms to the Subscriber Protocol.
  
      protocol Subscriber {
          associatedtype Input
@@ -126,12 +126,100 @@ final class IntSubscriber: Subscriber {
     
     func receive(subscription: any Subscription) {
         print("Subscribed")
-        subscription.request(.max(3))   // Request only 3 values.
+//        subscription.request(.max(3))   // Request only 3 values.
+        subscription.request(.none)     // won't produce any value.
     }
     
     func receive(_ input: Int) -> Subscribers.Demand {
         print("Received \(input)")
-        return .none
+//        return .none
+        return .max(2)
+        // “Every time I get a value, I can handle 2 more.
+        // So demand never reaches zero.
+        
+        /**
+         
+         Key rule (keep this in mind)
+
+         📌 Demand is cumulative
+
+         Total demand =
+
+         (what you requested before)
+
+         (what you return from receive(_:))
+         − (values already delivered)
+
+         Step-by-step timeline
+         🔹 Step 0 — Subscription happens
+         subscription.request(.max(3))
+
+
+         🧮 Demand = 3
+
+         Publisher is now allowed to send up to 3 values.
+
+         🔹 Step 1 — Publisher sends 1
+         Received 1
+
+
+         What happens internally:
+
+         Demand was 3
+
+         1 value delivered → demand becomes 2
+
+         You return .max(2) → add 2
+
+         🧮 New demand = 2 + 2 = 4
+
+         🔹 Step 2 — Publisher sends 2
+         Received 2
+
+
+         Demand was 4
+
+         1 delivered → 3
+
+         You return .max(2)
+
+         🧮 New demand = 3 + 2 = 5
+
+         🔹 Step 3 — Publisher sends 3
+         Received 3
+
+
+         Demand was 5
+
+         1 delivered → 4
+
+         Return .max(2)
+
+         🧮 New demand = 4 + 2 = 6
+
+         🔹 Step 4 — Publisher sends 4
+         Received 4
+
+
+         Demand was 6
+
+         1 delivered → 5
+
+         Return .max(2)
+
+         🧮 New demand = 7
+
+         🚨 Important observation
+
+         Even though you initially requested only 3 values,
+         your subscriber is now saying:
+
+         “Every time I get a value, I can handle 2 more.”
+
+         So demand never reaches zero.
+
+         This subscriber will receive infinite values.
+         */
     }
     
     func receive(completion: Subscribers.Completion<Never>) {

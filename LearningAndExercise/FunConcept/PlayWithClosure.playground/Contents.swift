@@ -197,7 +197,7 @@ func multipleDefer() {
 
 multipleDefer()
 // Remember one thing that defer execute in the algo of
-// First In Last Out, so the last one will execution First
+// Last In First Out, so the last one will execution First
 
 
 // Output
