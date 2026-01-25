@@ -283,7 +283,7 @@ class OperatorCollect {
         publisher
             .collect()
             .sink(receiveValue: {
-                print("all values as array: \($0)")         // After getting all vlaues
+                print("all values as array: \($0)")         // After getting all vlaues and completion.
             })
             .store(in: &cancellable)
         
@@ -1014,28 +1014,148 @@ class OperatorDelay {
 
 // Can be used for textfield input.
 class OperatorCollectByTime {
-    var subscriptions = Set<AnyCancellable>()
+    var cancellable = Set<AnyCancellable>()
     let sourcePublisher = PassthroughSubject<String, Never>()
-    
-    func testCollectByTimeCount() {
-        sourcePublisher
-            .collect(.byTimeOrCount(DispatchQueue.main, .seconds(5), 2))        // It will wait for 5 second if it will not get the count.
-            .sink { value in
-                print("Vlaue: \(value)")
-            }
-            .store(in: &subscriptions)
+    let publisher1 = PassthroughSubject<Int, NetworkError>()
+
+    func foo() {
+        let publisher = PassthroughSubject<Int, Never>()
+
+        // MARK: Execution: 1
+        /*
+        publisher
+            .collect(.byTimeOrCount(DispatchQueue.main, .seconds(4), 2))
+            .sink(receiveValue: {
+                print("all values as array: \($0)")
+            })
+            .store(in: &cancellable)
         
-        sourcePublisher
-            .collect(.byTimeOrCount(DispatchQueue.main, .seconds(5), 1))    //will not wait the interval as count is one.
-            
-            .sink { value in
-                print("Vlaue do not wait: \(value)")
-            }
-            .store(in: &subscriptions)
+        publisher.send(1)
+        publisher.send(2)
+        publisher.send(3)
         
-        sourcePublisher.send("Hello")
-        sourcePublisher.send("world")
-        sourcePublisher.send("Again")
+        /*
+         Output -
+         all values as array: [1, 2]
+         // After four second if it did not get second value, it will return the single value.
+         all values as array: [3]
+         
+         
+         In Execution One first [1, 2] collection will print immediately, as it is getting it properly. But in the case of 3, it will wait for four second for the second value to pair with 3, to make another collection with 3. SO Second time it will wait for 4 second and if it won't get any value, it will return only [3]
+         */
+         */
+        
+        // MARK: Execution: 2
+        /*
+        publisher
+            .collect(.byTimeOrCount(DispatchQueue.main, .seconds(4), 1))
+            .sink(receiveValue: {
+                print("all values as array: \($0)")
+            })
+            .store(in: &cancellable)
+        
+        publisher.send(1)
+        publisher.send(2)
+        publisher.send(3)
+        
+        /*
+         Output -
+         all values as array: [1]
+         all values as array: [2]
+         all values as array: [3]
+         
+         In second execution it will print all the vlaues immediately, as the value require to make an collection here is only one. And it is getting it immediately. So Here it will not wait for four second
+         */
+         
+         */
+        
+        // MARK: Execution: 3
+        /*
+        publisher
+            .collect(.byTime(DispatchQueue.main, .seconds(4)))
+            .sink(receiveValue: {
+                print("all values as array: \($0)")
+            })
+            .store(in: &cancellable)
+        
+        publisher.send(1)
+        publisher.send(2)
+        publisher.send(3)
+        
+        /*
+         Output -
+         Wait for 4 seconds
+         all values as array: [1, 2, 3]
+         
+         🧠 Here as we don't mention any collection limit, so it will wait for 4 second and then print all the collection values send by the publisher with in 4 second.
+         */
+         
+         */
+        
+        // MARK: Execution: 4
+        /*
+        publisher1
+            .collect(2)
+            .sink(receiveCompletion: { completion in
+                print("Complete with : \(completion)")
+            }, receiveValue: { collection in
+                print("all values as array: \(collection)")
+            })
+            .store(in: &cancellable)
+        
+        publisher1.send(1)
+        publisher1.send(2)
+        publisher1.send(3)
+        
+//        publisher1.send(completion: .finished)
+        publisher1.send(completion: .failure(.badURL))
+        
+        /*
+         Output -
+         all values as array: [1, 2]
+         all values as array: [3]
+         
+         
+         Here as we mention to collect collection of two elements, the first time it get two elemetn it will return [1, 2]
+         
+         Then it will not receive 3 untill you send the completion with success, because it will still wait for the second value to complete the collection.
+         Now if you comment the completion with success line [3] will never print.
+         
+         But if you send a completion with error, then it will never return [3] and which is also correct.
+         */
+         
+         */
+        
+        // MARK: Execution: 5
+        publisher1
+            .collect()
+            .sink(receiveCompletion: { completion in
+                print("Complete with : \(completion)")
+            }, receiveValue: { collection in
+                print("all values as array: \(collection)")
+            })
+            .store(in: &cancellable)
+        
+        publisher1.send(1)
+        publisher1.send(2)
+        publisher1.send(3)
+        
+//        publisher1.send(completion: .finished)
+        publisher1.send(completion: .failure(.badURL))
+        
+        /*
+         Output -
+         Case 1:
+         If you do not send any completion it won't print anything
+         
+         Case 2: IN case of Completion with success
+         all values as array: [1, 2, 3]
+         Complete with : finished
+         
+         case 3: IN case of completion with failure. (It breaks the stream)
+         Complete with : failure(LearningAndExercise.NetworkError.badURL)
+         
+         */
     }
 }
 
@@ -1134,6 +1254,44 @@ class OperatorThrottle {
     }
 }
 
+/*
+ ✅ Real-world example: Button tap throttling (prevent double submit)
+
+ Imagine a Submit button. You want to allow at most one tap every 2 seconds, even if the user taps rapidly.
+
+ submitButton.tapPublisher
+     .throttle(for: .seconds(2), scheduler: RunLoop.main, latest: false)
+     .sink { _ in
+         submitForm()
+     }
+
+ What happens:
+
+ First tap is allowed immediately.
+
+ Any additional taps within the next 2 seconds are ignored.
+
+ After 2 seconds, the next tap is allowed.
+
+ 🔹 Another real-world example: API calls while scrolling
+ scrollPositionPublisher
+     .throttle(for: .milliseconds(300), scheduler: RunLoop.main, latest: true)
+     .sink { position in
+         loadData(for: position)
+     }
+
+
+ This:
+
+ Limits API calls to at most one every 300 ms
+
+ Uses the latest scroll position when the window closes.
+
+ 🧠 Interview one-liner
+
+ Throttle limits how often a stream can emit values, ensuring at most one value per time interval — useful for rate-limiting user interactions or network calls.
+ */
+
 
 /**
  ✅ Throttle vs Debounce
@@ -1226,7 +1384,7 @@ class OperatorTimeout {
             })
             .store(in: &subscriptions)
 
-        sourcePublisher.send("hello")       // If I do not send value for 2 minutes it will finish the subscription with failure.
+        sourcePublisher.send("hello")       // If I do not send value for 2  seconds it will finish the subscription with failure.
     }
 }
 
