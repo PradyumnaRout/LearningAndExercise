@@ -124,15 +124,23 @@ final class IntSubscriber: Subscriber {
     typealias Input = Int
     typealias Failure = Never
     
+
     func receive(subscription: any Subscription) {
         print("Subscribed")
+        
+        // Backpressure = “Okay, I will not send more than 3”
 //        subscription.request(.max(3))   // Request only 3 values.
+        
         subscription.request(.none)     // won't produce any value.
     }
     
     func receive(_ input: Int) -> Subscribers.Demand {
         print("Received \(input)")
+        // Combine’s runtime uses that demand to enforce backpressure
+//        Demand = “I can not take any items.”
 //        return .none
+        
+//        Demand = “I can take 3 items”
         return .max(2)
         // “Every time I get a value, I can handle 2 more.
         // So demand never reaches zero.
@@ -286,3 +294,172 @@ struct UseIntSubscriber {
     }
 }
 
+
+
+// MARK: CUSTOM SUBSRIBER DEFINING DEMAND AND BACKPRESSURE PROPERLY
+final class CustomDemandAndBackpressureSubcriber: Subscriber {
+    typealias Input = String
+    typealias Failure = Never
+    
+    private var subscription: Subscription?
+    
+    func receive(subscription: any Subscription) {
+        print("This is the subcription method where backpressure happens.")
+        print("")
+        self.subscription = subscription
+        // Allowing backpressure of maximum Two values, So that it can only send upto two values.
+        subscription.request(.max(3))
+    }
+    
+    func receive(_ input: String) -> Subscribers.Demand {
+        // This is also the correct place to cancel the subscription
+        if input == "Stop" {
+            // Now to cancel the subscription I have to store subscription
+            print("Cancelling the subscription.")
+            subscription?.cancel()
+            return .none
+        }
+        
+        print("The string I get:: \(input)")
+        
+//        print("This function give the demand to enfore the backpressue")
+        //This aloows more values to send over backpressure after every decrease in backpressure
+        // That means whenever backpressure decrease by one, it increase it by its demanding amount.
+        // In the above example if backpressure decrease by one, it'll become two
+        // And after that demand internally increse it by 2, and make it 4, to allow four values. Only if I return demand as 2.
+        
+        return .none
+        // If I return .none, then it will not overcome backpressue. Now the demand is nil
+    }
+    
+    func receive(completion: Subscribers.Completion<Never>) {
+        print("Completed!")
+        subscription = nil
+    }
+}
+
+
+// MARK: Creating a custom subscriber like sink
+final class ClosureSubscriber<Input>: Subscriber {
+    typealias Failure = Never
+
+    private let onValue: (Input) -> Subscribers.Demand
+    private let onCompletion: (Subscribers.Completion<Never>) -> Void
+    private var subscription: Subscription?
+
+    init(
+        onValue: @escaping (Input) -> Subscribers.Demand,
+        onCompletion: @escaping (Subscribers.Completion<Never>) -> Void
+    ) {
+        self.onValue = onValue
+        self.onCompletion = onCompletion
+    }
+
+    func receive(subscription: Subscription) {
+        self.subscription = subscription
+        subscription.request(.max(1)) // initial demand
+    }
+
+    func receive(_ input: Input) -> Subscribers.Demand {
+        return onValue(input)
+    }
+
+    func receive(completion: Subscribers.Completion<Never>) {
+        onCompletion(completion)
+        subscription = nil
+    }
+}
+
+// Usage
+/*
+ let subscriber = ClosureSubscriber<String>(
+     onValue: { value in
+         print("Received:", value)
+         return .none
+     },
+     onCompletion: { completion in
+         switch completion {
+         case .finished:
+             print("Finished")
+         case .failure(let error):
+             print("Error:", error)
+         }
+     }
+ )
+
+ publisher.subscribe(subscriber)
+
+ */
+
+final class ClosureSubscriberWithFailure<Input, Failure: Error>: Subscriber {
+
+    private let onValue: (Input) -> Subscribers.Demand
+    private let onCompletion: (Subscribers.Completion<Failure>) -> Void
+    private var subscription: Subscription?
+
+    init(
+        onValue: @escaping (Input) -> Subscribers.Demand,
+        onCompletion: @escaping (Subscribers.Completion<Failure>) -> Void
+    ) {
+        self.onValue = onValue
+        self.onCompletion = onCompletion
+    }
+
+    func receive(subscription: Subscription) {
+        self.subscription = subscription
+        subscription.request(.max(1))
+    }
+
+    func receive(_ input: Input) -> Subscribers.Demand {
+        return onValue(input)
+    }
+
+    func receive(completion: Subscribers.Completion<Failure>) {
+        onCompletion(completion)
+        subscription = nil
+    }
+}
+
+
+// Usage:
+/*
+ 
+ enum NetworkError: Error {
+     case noInternet
+     case timeout
+ }
+
+ 
+ let publisher = ["A", "B", "C"]
+     .publisher
+     .tryMap { value -> String in
+         if value == "B" {
+             throw NetworkError.noInternet
+         }
+         return value
+     }
+     .mapError { $0 as! NetworkError }
+
+ 
+ let subscriber = ClosureSubscriber<String, NetworkError>(
+     onValue: { value in
+         print("Received value:", value)
+         return .none    // no extra demand
+     },
+     onCompletion: { completion in
+         switch completion {
+         case .finished:
+             print("Completed successfully")
+         case .failure(let error):
+             print("Failed with error:", error)
+         }
+     }
+ )
+
+ publisher.subscribe(subscriber)
+
+ 
+ Received value: A
+ Failed with error: noInternet
+
+ */

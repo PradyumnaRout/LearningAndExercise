@@ -19,6 +19,7 @@ import Combine
 // https://forums.swift.org/t/combine-creating-a-custom-publisher-by-wrapping-another-publisher-and-operating-on-it/48812
 
 
+// MARK: Combining operators in Combine
 /**
  Merge - Single emmision (always) do not wait for next one
  
@@ -287,6 +288,7 @@ class OperatorCollect {
             .store(in: &cancellable)
         
         publisher
+        // Collect by pair of two. See the output.
             .collect(2)
             .sink(receiveValue: {
                 print("array elements limited by 2: \($0)")
@@ -301,7 +303,7 @@ class OperatorCollect {
         /* output -
          array elements limited by 2: [1, 2]
          all values as array: [1, 2, 3]
-         array elements limited by 2: [3]
+         array elements limited by 2: [3]   // It will print only one value because here we are completing the publisher.
          */
     }
 }
@@ -347,7 +349,7 @@ class OperatorFilter {
 }
 
 // 🔵 Remove duplicates
-// It automatically works for any values conforming to Equatable, including String. It will not pass down identical values.
+// It automatically works for any values conforming to Equatable, including String. It will not pass down identical values. Only work in case of Collections.
 
 class OperatorRemoveDuplicate {
     var cancellable = Set<AnyCancellable>()
@@ -476,7 +478,7 @@ class OperatorDrop {
 
 
 // 🔹 Combining Operators
-// This set of operators lets you combine events emitted by different publishers and create meaningful combinations of data in you Combine code.
+// This set of operators lets you combine events emitted by different publishers and create meaningful combinations of data in your Combine code.
 
 // 🔵 Append & Prepend (Mostly used for collection)
 // Allows us to add values that emit before/after any values from your original publisher. (Allows only same type)
@@ -707,6 +709,33 @@ class OperatorMerge {
                  UI update: new message -> Server: How are you?
          */
     }
+    
+    
+    // MARK: Failure check in Merge:
+    func foo() {
+        publisher1
+            .merge(with: publisher2)
+            .sink { completion in
+                print("Complete With : \(completion)")
+            } receiveValue: { value in
+                print("Received Value:: \(value)")
+            }
+            .store(in: &cancellable)
+        
+        publisher1.send(1)
+        publisher1.send(2)
+        publisher2.send(3)
+        publisher1.send(4)
+        publisher2.send(5)
+//        publisher1.send(completion: .failure(.badURL))
+        publisher1.send(completion: .finished)
+        publisher2.send(6)
+        publisher1.send(7)
+        
+        // In case of merge if one the publisher get complete with error, The whole stream will complte with error and won't emits value anymore.
+        
+        // But if One of them complete with finished / success the other will execute properly. There is no disturbance in the emit stream.
+    }
 }
 
 
@@ -901,7 +930,7 @@ class OperatorZip {
         publisher2.send("b")
         publisher1.send(3)
         publisher2.send("c")
-        publisher2.send("d") // it will not be printed
+        publisher2.send("d") // it will not be printed, because it is alone now.
         
         publisher1.send(completion: .finished)
         publisher2.send(completion: .finished)
@@ -915,7 +944,7 @@ class OperatorZip {
     }
     
     func zipWithFailure() {
-        // zip requires both publishers to have the same Failure type. if not then it will show error nstance method 'zip' requires the types 'NetworkError' and 'Never' be equivalent
+        // zip requires both publishers to have the same Failure type. if not then it will show error nstance method 'zip' requires the types 'NetworkError' and 'Never' be equivalent, also same for all the combining operator.
         let firstPublisher = PassthroughSubject<String, NetworkError>()
         let secondPublisher = PassthroughSubject<String, NetworkError>()
         
@@ -939,6 +968,8 @@ class OperatorZip {
         secondPublisher.send("Any problem")
         firstPublisher.send("100")
         secondPublisher.send(completion: .failure(.badURL))
+        secondPublisher.send("Any problem")
+
         
         
         /**

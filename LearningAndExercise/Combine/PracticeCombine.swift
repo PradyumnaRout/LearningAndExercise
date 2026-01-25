@@ -33,22 +33,40 @@ import Combine
 class CombineOperations {
     var cancellable = Set<AnyCancellable>()
     
+    let publisher1 = PassthroughSubject<Int, NetworkError>()
+    let publisher2 = PassthroughSubject<Int, NetworkError>()
+    
     func operations() {
         foo()
     }
     
-    let subject = CurrentValueSubject<Int, Never>(0)
     func foo() {
-        let publisher = [10,20,30,40,50,60].publisher
+        let firstPublisher = PassthroughSubject<String, NetworkError>()
+        let secondPublisher = PassthroughSubject<String, NetworkError>()
         
-        let filterPublisher = [10, 20, 30, 40, 50, 60].publisher
-            .map { $0 * 1 }
-        
-        let subscriber = IntSubscriber()
-        
-        filterPublisher.subscribe(subscriber)
+        firstPublisher
+            .zip(secondPublisher)
+            .sink { status in
+                switch status {
+                case .finished:
+                    print("Task Finished")
+                case .failure(let error):
+                    print("Error occured: \(error.localizedDescription)")
+                }
+            } receiveValue: { (value1, value2) in
+                print("Value1: \(value1), and Value2: \(value2)")
+            }
+            .store(in: &cancellable)
+
+        firstPublisher.send("Hello")
+        firstPublisher.send("How you doing")
+        secondPublisher.send("Guys")
+        secondPublisher.send("Any problem")
+        firstPublisher.send("100")
+        secondPublisher.send(completion: .failure(.badURL))
+        secondPublisher.send("No problem")
+
     }
-    
 }
 
 

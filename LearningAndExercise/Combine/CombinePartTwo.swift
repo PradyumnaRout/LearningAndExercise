@@ -407,7 +407,8 @@ struct ChatRoom {
  A Deferred publisher in Combine waits until it has a subscriber before initializing the underlying publisher. This delay in creation is useful for optimising performance by avoiding unnecessary work until there’s a demand for data. Additionally, it’s compatible with operators like retry
  */
 
-struct DeferredPub {
+class DeferredPub {
+    var cancellable = Set<AnyCancellable>()
     func subscribe() {
         let deferredPublisher = Deferred {
             Future<String, Never> { promise in
@@ -430,6 +431,99 @@ struct DeferredPub {
 
 //        print("Before subscribing")
 //        future.sink { print("Received:", $0) }
+    }
+    
+    func foo() {
+        print("Before creating Future")
+
+        let future = Future<String, Never> { promise in
+            print("Lets begin future publisher")
+            
+            DispatchQueue.global().asyncAfter(deadline: .now() + 5) {
+                print("Here is the result")
+                promise(.success("Success"))
+            }
+        }
+
+        print("After creating Future")
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+            future
+                .sink { value in
+                    print("Finished")
+                }
+                .store(in: &self.cancellable)
+        }
+        
+        /*
+         Output -
+         Before creating Future
+         Lets begin future publisher
+         After creating Future
+         (2 seconds pass)
+         (5 seconds from creation)
+         Here is the result
+         Finished
+
+         
+         What happens:
+
+         The closure runs immediately when Future is created.
+         ➡️ "Lets begin future publisher" prints right away.
+         ➡️ The async work starts immediately.
+         ➡️ Even if no one subscribes, the work still happens.
+         ➡️ All subscribers get the same result.
+         So this is eager — work starts at creation time.
+         */
+    }
+    
+    func foo2() {
+        print("Before creating Deferred")
+
+        let deferred = Deferred {
+            Future<String, Never> { promise in
+                print("Lets begin future publisher")
+                
+                DispatchQueue.global().asyncAfter(deadline: .now() + 5) {
+                    print("Here is the result")
+                    promise(.success("Success"))
+                }
+            }
+        }
+
+        print("After creating Deferred")
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+            deferred
+                .sink { _ in
+                    print("Finished")
+                }
+                .store(in: &self.cancellable)
+        }
+        
+        /*
+         Output -
+         Before creating Deferred
+         After creating Deferred
+         (2 seconds pass)
+         Lets begin future publisher
+         (5 seconds pass)
+         Here is the result
+         Finished
+
+         
+         What happens:
+
+         Nothing happens at creation time.
+         ➡️ The closure runs only when someone subscribes.
+         ➡️ Each subscriber gets a new Future.
+         ➡️ So the work starts per subscriber.
+         
+         Now you can clearly see:
+         With Future alone → work starts at creation.
+         With Deferred { Future } → work starts at subscription.
+         */
+
     }
 }
 
@@ -504,6 +598,217 @@ class CollectionPub {
 
 
  💡 Now, "Deferred Future started" happens only after subscription.
+ 
+ 
+ 
+ ✅ Real-world example: API token refresh on demand
+
+ Imagine an app that fetches a secure token from an API. You don’t want to fetch the token when defining the publisher — only when someone subscribes.
+
+ ❌ Without Deferred (problematic)
+ let tokenPublisher = URLSession.shared.dataTaskPublisher(for: tokenURL)
+     .map(\.data)
+     .eraseToAnyPublisher()
+
+
+ This publisher is created immediately and may reuse stale state or be shared unintentionally.
+
+ ✅ With Deferred (correct behavior)
+ func fetchAuthToken() -> AnyPublisher<String, Error> {
+     Deferred {
+         URLSession.shared.dataTaskPublisher(for: tokenURL)
+             .map(\.data)
+             .decode(type: TokenResponse.self, decoder: JSONDecoder())
+             .map(\.token)
+             .eraseToAnyPublisher()
+     }
+     .eraseToAnyPublisher()
+ }
+
+ 🔁 What this gives you
+
+ Each subscriber triggers a fresh network request
+
+ No token fetch happens until someone subscribes
+
+ Perfect for authentication, retries, and lazy workflows
+
+ 🧠 Another real-world example: Database read
+ func loadUserProfile() -> AnyPublisher<User, Error> {
+     Deferred {
+         Future { promise in
+             database.loadUser { result in
+                 promise(result)
+             }
+         }
+     }
+     .eraseToAnyPublisher()
+ }
+
+
+ Each subscription:
+
+ Opens the DB read
+
+ Fetches fresh data
+
+ Doesn’t reuse old results
+
+ 🚫 When NOT to use Deferred
+
+ When you want to share a single result across multiple subscribers → use .share() or .multicast() instead.
+ */
+
+/*
+ 🔹 Step 1: A publisher does nothing until someone subscribes
+
+ This is true for all Combine publishers:
+
+ let publisher = URLSession.shared.dataTaskPublisher(for: tokenURL)
+
+
+ ➡️ No network call happens yet.
+ ➡️ The call happens only when someone does:
+
+ publisher.sink { _ in } receiveValue: { _ in }
+
+
+ So you were right — it does not run early.
+
+ 🔹 Step 2: Then what does Deferred change?
+
+ It changes when the publisher itself is created, not when it runs.
+
+ Think of it like this:
+
+ Without Deferred: you build the request once, then reuse it.
+
+ With Deferred: you build the request each time someone subscribes.
+
+ 🔹 Step 3: Concrete example — token that changes
+
+ Imagine this function:
+
+ func buildTokenURL() -> URL {
+     print("Building URL")
+     return URL(string: "https://api.example.com/token?ts=\(Date().timeIntervalSince1970)")!
+ }
+
+ ❌ Without Deferred
+ let tokenPublisher = URLSession.shared.dataTaskPublisher(for: buildTokenURL())
+
+
+ What happens:
+
+ buildTokenURL() runs immediately, right here.
+
+ The URL is fixed forever.
+
+ Even though the request runs later, it always uses that old URL.
+
+ ✅ With Deferred
+ let tokenPublisher = Deferred {
+     URLSession.shared.dataTaskPublisher(for: buildTokenURL())
+ }
+
+
+ What happens:
+
+ buildTokenURL() runs only when someone subscribes.
+
+ Each subscriber gets a fresh URL.
+
+ 🧠 Final mental model
+ Without Deferred    With Deferred
+ “Create request now, run later”    “Create request when someone subscribes”
+ Static    Dynamic
+ Good for constants    Good for tokens, timestamps, auth, etc
+ 🧪 Tiny experiment you can run
+ let pub = Deferred {
+     print("Creating publisher")
+     return Just(1)
+ }
+
+ print("Before subscribe")
+ pub.sink { _ in }
+
+
+ Output:
+
+ Before subscribe
+ Creating publisher
+
+
+ Without Deferred, "Creating publisher" would print before "Before subscribe".
+ 
+ 
+ 
+ 🧠 yes understood. But one thing why we need everytime new instance
+ 
+ 🔹 Short answer:
+
+ You need a new publisher instance when the work depends on changing state or must be independent per subscriber.
+
+ 🧠 Think of a publisher like a “job description”
+
+ Creating the publisher = writing the job description
+
+ Subscribing = actually doing the job
+
+ If the job description depends on something that changes (token, timestamp, user ID, headers, file path), then:
+ ➡️ You want to rewrite the job description each time → new publisher instance.
+
+ 🔍 Real-world reasons you need a new instance
+ 1️⃣ Dynamic data (most common)
+ Deferred {
+     URLSession.shared.dataTaskPublisher(for: buildRequestWithLatestToken())
+ }
+
+
+ If the token changes, each subscriber must use the latest token. Reusing the same publisher would reuse the old token.
+
+ 2️⃣ Independent retries or cancellations
+
+ If two parts of your app subscribe:
+
+ One cancels
+
+ The other should continue unaffected
+
+ That only works cleanly if each gets its own publisher instance.
+
+ 3️⃣ Side effects should happen per subscriber
+
+ Example: logging, metrics, file writes, DB reads.
+
+ Deferred {
+     print("Starting download")
+     return downloadPublisher()
+ }
+
+
+ You want "Starting download" to run per subscriber, not just once.
+
+ 🚫 When you don’t need a new instance
+
+ If:
+
+ The data is static
+
+ You want all subscribers to share the same result
+
+ Then you don’t use Deferred. You use:
+
+ publisher.share()
+
+ ✅ Final takeaway
+
+ You need a new publisher instance when:
+ ✔ The input changes
+ ✔ The side effects must run per subscriber
+ ✔ Each subscriber must be independent
+
+ Otherwise, reuse and share.
  */
 
 
