@@ -24,7 +24,7 @@ import Combine
  A pipeline that can't fail is nice for UI streams, a failing pipeline is expected for I/O like networking.
  
      // Cannot fail
-     let neverFails = Just(42) // Failure == Never
+ let neverFails = Just(42) // Failure == Never
 
      // Can fail
      struct APIError: Error { let message: String }
