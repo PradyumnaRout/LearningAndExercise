@@ -57,7 +57,7 @@ class MulticastInCombine {
     
     var cancellable = Set<AnyCancellable>()
     
-    // 🔷 Share
+    // 🔷 Share - share() turns the upstream publisher into a multicast publisher:
     // By default, each subscriber triggers the publisher separately, which can be inefficient `(especially for NETWORK CALLS)`.
     
     //🧩 What Happens without .share()
@@ -168,6 +168,56 @@ class MulticastInCombine {
         
     }
     
+    func foo() {
+        let publisher = Future<String, Never> { promise in
+            print("Calling future")
+            return promise(.success("Hello Future"))
+        }
+            .share()
+        
+        
+        publisher
+            .sink { value in
+                print("Publisher One: \(value)")
+            }
+            .store(in: &cancellable)
+        
+        publisher
+            .sink { value in
+                print("Publisher Two: \(value)")
+            }
+            .store(in: &cancellable)
+    }
+    
+    /**
+     Output without .share()
+     
+     Calling future
+     Publisher One: Hello Future
+     Publisher Two: Hello Future
+     
+     
+     Output with .share()
+     Calling future
+     Publisher One: Hello Future
+     
+     Why didn’t Publisher Two fire?
+     That means:
+
+     First sink subscribes → triggers the Future
+     Future immediately completes
+     Second sink subscribes after it already completed
+     share() does not replay values
+     It only shares live emissions.
+     
+     .multicast(subject: CurrentValueSubject<String?, Never>(nil))
+     .autoconnect()
+     
+     You can use the above to print the latest value in the above share case.
+     Here the future block will only call one time because of .share().
+     🧠 The output will be smae if you use deffered also.
+     */
+    
     
     // MARK: -  Easily Accessable Example of .share()
     
@@ -203,6 +253,7 @@ class MulticastInCombine {
         let multicasted = URLSession.shared.dataTaskPublisher(for: URL(string: "https://jsonplaceholder.typicode.com/todos/1")!)
             .map(\.data)
             .multicast(subject: subject)
+//            .autoconnect()
         
         multicasted
             .sink(receiveCompletion: { completion in

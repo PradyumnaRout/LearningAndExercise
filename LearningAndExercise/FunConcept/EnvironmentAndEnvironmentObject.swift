@@ -281,9 +281,9 @@ struct CustomEnvironmentUsages: View {
             })
             .navigationTitle("ScreenOne")
         }
-        .environment(value)
-        .environment(\.point, pointValueAsKeyValue)
-        //.environment(type)                              // will not allowed in SwiftUI
+        .environment(value)         // Directly can use. without creating a custom environment key and value as it is @Observable
+        .environment(\.point, pointValueAsKeyValue)         // As key value pair.
+//        .environment(type)                              // will not allowed in SwiftUI
         .environment(\.screenType, type)
     }
 }

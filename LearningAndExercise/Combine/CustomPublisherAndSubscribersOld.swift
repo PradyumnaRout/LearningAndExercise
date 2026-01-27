@@ -12,7 +12,7 @@ import Combine
 /**
  ✅ 4️⃣ – Simplified Data Flow
 
- Publisher → Calls subscriber.receive(subscription: subscription)
+ Publisher → Calls subscriber.receive<S>(subscriber: S)
 
  Subscriber → Calls subscription.request(_:) to specify how many values it wants.
 

@@ -221,3 +221,20 @@ struct InRange {
 }
 
 
+
+@propertyWrapper
+struct TwoMultiplier {
+    private var value: Int
+    
+    var wrappedValue: Int {
+        get {
+            value * 2
+        } set {
+            value = newValue
+        }
+    }
+    
+    init(wrappedValue: Int) {
+        self.value = wrappedValue
+    }
+}

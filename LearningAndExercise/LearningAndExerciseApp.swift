@@ -17,7 +17,8 @@ struct LearningAndExerciseApp: App {
 
     var body: some Scene {
         WindowGroup {
-            PracticeCombine()
+            VerifyOtp()
+//            PracticeCombine()
 //            PracticeConcurrency()
 //            BookListView()
 //            SongsListView()
