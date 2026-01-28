@@ -20,7 +20,7 @@ import Foundation
 
 struct Player {
     var score: Int  // stored property
-    lazy var bigData = [String]()  // only created when needed
+    lazy var bigData = [String]()  // only created when needed Lazy stored property.
 }
 
 /**
@@ -76,6 +76,28 @@ struct Person {
     // Used with stored properties to watch changes after Swift has already handled storage.
     // In Swift, property observers (willSet / didSet) do not run when properties are set inside init.
     // 📌 Property observers only run after initialization, when the property is mutated later.
+    class ExampleOne {
+        var name: String
+        var score: Int = 30 {
+            // Will only run when assign except init.
+            willSet {
+                print("Score will become \(newValue)")
+            }
+            didSet {
+                print("Score was \(oldValue), now \(score)")
+            }
+        }
+        
+        init(name: String, score: Int) {
+            self.name = name
+            self.score = score
+        }
+        
+        func updateScore() {
+            self.score = 100
+        }
+    }
+    
     var score: Int = 0 {
         willSet {
             print("Score will become \(newValue)")
@@ -238,20 +260,3 @@ struct Rectangle {
  */
 
 
-
-class TestProperty {
-    
-    var name: String = "Santanu"
-    var lastName: String = "Sahoo"
-    
-    lazy var fullName: String = {
-        let wholeName = name + lastName
-        return wholeName
-    }()
-    
-    func testProperty() {
-        name = "Manmath"
-        let wholeName = fullName
-        print(wholeName)
-    }
-}

@@ -7,6 +7,372 @@
 
 import Foundation
 import SwiftUI
+
+// MARK: here’s a clean, real example of using any with a protocol 👇
+
+/*
+ 🔹 Define a protocol
+ protocol Animal {
+     func makeSound()
+ }
+
+ 🔹 Use any Protocol
+ var pet: any Animal
+
+ pet = Dog()
+ pet.makeSound()
+
+ pet = Cat()
+ pet.makeSound()
+
+ 🔹 Concrete types
+ struct Dog: Animal {
+     func makeSound() {
+         print("Woof")
+     }
+ }
+
+ struct Cat: Animal {
+     func makeSound() {
+         print("Meow")
+     }
+ }
+
+
+ Here:
+
+ var pet: any Animal
+
+ means:
+
+ “pet can hold any concrete type that conforms to Animal,
+ but I don’t know which one at compile time.”
+
+ That is an existential type.
+
+ Compare with generics (important difference)
+ Using generics:
+ func play<T: Animal>(with animal: T) {
+     animal.makeSound()
+ }
+
+
+ This means:
+
+ “One specific type chosen at compile time.”
+
+ Using any Animal:
+ func play(with animal: any Animal) {
+     animal.makeSound()
+ }
+
+
+ This means:
+
+ “Type erased to Animal, dynamic dispatch.”
+
+ Another example with properties
+ protocol Vehicle {
+     var wheels: Int { get }
+ }
+
+ struct Bike: Vehicle {
+     let wheels = 2
+ }
+
+ struct Car: Vehicle {
+     let wheels = 4
+ }
+
+ class Garage {
+     var vehicle: any Vehicle
+
+     init(vehicle: any Vehicle) {
+         self.vehicle = vehicle
+     }
+ }
+
+
+ Usage:
+
+ let g1 = Garage(vehicle: Bike())
+ let g2 = Garage(vehicle: Car())
+ print(g1.vehicle.wheels)
+ print(g2.vehicle.wheels)
+
+ Why Swift introduced any
+
+ Before Swift 5.7, you wrote:
+
+ var pet: Animal
+
+
+ But that hid the fact that this was an existential.
+
+ Now Swift forces clarity:
+
+ var pet: any Animal
+
+
+ So you know:
+
+ “I am losing the concrete type here.”
+
+ Key rule
+
+ any can ONLY be used with:
+ ✔️ protocols
+ ❌ structs
+ ❌ classes
+ ❌ enums
+
+ So this is invalid:
+
+ var x: any String ❌
+
+
+ But this is valid:
+
+ var x: any CustomStringConvertible = "Hello"
+ */
+
+
+/*
+ 🧠 Give me an example how should I explain the intervier about the type erasure and opaque type in swift
+
+ Perfect interview question — this is exactly the kind of thing interviewers love because it shows concept + communication skill.
+
+ Here’s a ready-to-say interview-style answer with examples.
+
+ 🗣️ How to explain Opaque Types (some)
+
+ “In Swift, an opaque type using some Protocol means I return a specific concrete type that conforms to a protocol, but I hide the actual type from the caller.
+ The compiler still knows the concrete type, so it keeps full type safety and performance.”
+
+ Example:
+ protocol Shape {
+     func draw()
+ }
+
+ struct Circle: Shape {
+     func draw() { print("Circle") }
+ }
+
+ func makeShape() -> some Shape {
+     return Circle()
+ }
+
+
+ What I’d say:
+
+ “Here, makeShape always returns a Circle, but the caller only sees it as some Shape.
+ The important part is: it must always return the same concrete type.
+ This allows abstraction without losing static type checking.”
+
+ 🗣️ How to explain Type Erasure (any / AnyX)
+
+ “Type erasure is used when I want to store or pass different concrete types that conform to the same protocol, but I don’t care about their concrete type anymore.
+ I erase the type information and work with a common interface.”
+
+ Example:
+ protocol Animal {
+     func sound()
+ }
+
+ struct Dog: Animal {
+     func sound() { print("Woof") }
+ }
+
+ struct Cat: Animal {
+     func sound() { print("Meow") }
+ }
+
+ let animals: [any Animal] = [Dog(), Cat()]
+
+ for a in animals {
+     a.sound()
+ }
+
+
+ What I’d say:
+
+ “Here, any Animal erases whether the object is a Dog or Cat.
+ We only know it conforms to Animal.
+ This allows heterogenous collections but loses concrete type information and may use dynamic dispatch.”
+
+ 🧠 Best interview contrast (this is gold)
+
+ You can say:
+
+ “Opaque types (some) hide the type from the caller but the compiler still knows it.
+ Type erasure (any or AnyX) hides the type even from the compiler.
+ So some keeps compile-time type safety, while any uses runtime polymorphism.”
+
+ One-liner definitions (interview-friendly)
+
+ Opaque type (some)
+
+ “I know the concrete type, but I don’t expose it.”
+
+ Type erasure (any)
+
+ “I don’t know or care about the concrete type anymore.”
+ 
+ =========================================================
+ 
+ 
+ Nice, this is a great thing to prep — here’s a polished 2-minute interview answer you can almost say verbatim:
+
+ “In Swift, opaque types and type erasure both help us abstract over concrete types, but they solve slightly different problems.
+
+ Opaque types use the keyword some. When I return some Protocol, it means the function returns one specific concrete type that conforms to that protocol, but the caller doesn’t know which type it is. The important point is that the compiler does know the concrete type, so we still get compile-time type safety and good performance.
+
+ For example:
+
+ protocol Shape {
+     func draw()
+ }
+
+ struct Circle: Shape {
+     func draw() { print("Circle") }
+
+ func makeShape() -> some Shape {
+     Circle()
+ }
+
+
+ Here, makeShape always returns a Circle, but the caller only sees it as some Shape. This allows the API to hide implementation details while keeping static typing. SwiftUI uses this pattern heavily, for example var body: some View, so the framework can change the underlying view types without breaking user code.
+
+ Type erasure, on the other hand, is used when I want to work with values of different concrete types that conform to the same protocol, but I don’t want to expose or depend on their concrete types anymore. In Swift 5.7+, this is written as any Protocol, which creates an existential type.
+
+ For example:
+
+ protocol Animal {
+     func sound()
+ }
+
+ struct Dog: Animal {
+     func sound() { print("Woof") }
+ }
+
+ struct Cat: Animal {
+     func sound() { print("Meow") }
+ }
+
+ let animals: [any Animal] = [Dog(), Cat()]
+
+
+ Here, any Animal erases whether the value is a Dog or Cat. We only know it conforms to Animal, which lets us store different concrete types in the same collection. The tradeoff is that we lose compile-time knowledge of the concrete type and rely on dynamic dispatch at runtime.
+
+ So the key difference is that opaque types hide the type from the caller but not from the compiler, while type erasure hides the type even from the compiler. I use some when I always return the same concrete type and want maximum type safety and performance, and I use any or a type-erased wrapper when I truly need to handle multiple different conforming types dynamically.”
+ */
+
+// Example of opaque type and type erasure in SwiftUI
+
+struct OpaqueTypeAndTypeErasure: View {
+    @State private var isTrue: Bool = true
+    var body: some View {
+        VStack {
+            customViewOne
+        }
+    }
+    
+    
+    var customViewOne: some View {
+        if isTrue {
+            VStack {
+                Text("Hello")
+                Text("World")
+            }
+        } else {
+            VStack {
+                Text("Hello")
+                Text("World")
+//                Text("OpaqueType")
+                // Uncommenting the third text will give error because compiler knows the return type. So it must be of same type.
+                // “I must return one single concrete type.”
+            }
+        }
+    }
+        
+    var customView2: AnyView {
+        // “I don’t care what the concrete view type is anymore, just treat it as a View.”
+            if isTrue {
+                return AnyView(
+                    VStack {
+                        Text("Hello")
+                        Text("World")
+                    }
+                )
+            } else {
+                return AnyView(
+                    VStack {
+                        Text("Hello")
+                        Text("World")
+                        Text("OpaqueType")
+                    }
+                )
+            }
+        }
+}
+/*
+ 
+ 🧠 So  both are type erasure?
+ 
+ 
+ Yes — you’re absolutely right 👍
+ Both any and AnyView are forms of type erasure.
+ They just operate at different layers of Swift.
+
+ Think of it like this:
+
+ Type erasure = “hide the concrete type.”
+ Both of them do that.
+ The difference is where and how they do it.
+
+ 1️⃣ any = language-level type erasure (for protocols)
+ var animal: any Animal = Dog()
+
+
+ What gets erased?
+
+ Dog  →  any Animal
+
+
+ You lose:
+ ✔️ knowledge that it’s a Dog
+ You keep:
+ ✔️ only what Animal guarantees
+
+ So:
+
+ any erases the concrete type into a protocol existential.
+
+ 2️⃣ AnyView = framework-level type erasure (for SwiftUI views)
+ let v = AnyView(Text("Hello"))
+
+
+ What gets erased?
+
+ Text  →  AnyView
+
+
+ You lose:
+ ✔️ the real view type (Text, VStack, etc.)
+ You keep:
+ ✔️ just “this is a View”
+
+ So:
+
+ AnyView erases a concrete View into a boxed wrapper.
+ */
+
+
+
+
+
+
+// MARK: CUSTOM TYPE ERASURE AND OPAQUE TYPE
 // ✅✅✅ Type Erasure ✅✅✅
 /**
  

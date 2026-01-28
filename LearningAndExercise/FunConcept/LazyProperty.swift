@@ -7,97 +7,83 @@
 
 import Foundation
 
-class UserData: Comparable {
-    var name: String
-    init(name: String) { self.name = name }
+class UserDetail {
+    var firstName: String
+    var lastName: String
     
-    static func ==(lhs: UserData, rhs: UserData) -> Bool {
-        return lhs.name == rhs.name
-    }
-    
-    static func < (lhs: UserData, rhs: UserData) -> Bool {
-        return lhs.name < rhs.name
+    init(firstName: String, lastName: String) {
+        self.firstName = firstName
+        self.lastName = lastName
     }
 }
 
 
-/**
- - Lazy property of value types does no update on something change in propery.
- - But in case of referecen proerty it updates.
+class TestProperty {
+    
+    var name: String = "Santanu"
+    var lastName: String = "Sahoo"
+    
+    var user = UserDetail(firstName: "Pradyumna", lastName: "Rout")
+    
+    lazy var fullName: String = {
+        let wholeName = name + lastName
+        return wholeName
+    }()
+    
+    lazy var exampleRef1: UserDetail = {
+        return UserDetail(firstName: name, lastName: lastName)
+    }()
+    
+    func testProperty() {
+        print("====== Value Types =======")
+        print("First: \(fullName)")
+        name = "Manmath "
+        print("Second: \(fullName)")
+        
+        print("\n====== Reference Types =======")
+        print("First: \(exampleRef1.firstName) \(exampleRef1.lastName)")
+        name = "Harish"
+        print("Second: \(exampleRef1.firstName) \(exampleRef1.lastName)")
+        
+        
+        print("\n==== Now chnage the name in the lazy property itself ====")
+        exampleRef1.firstName = "Samar"
+        print("First: \(exampleRef1.firstName) \(exampleRef1.lastName)")
+    }
+}
+
+/*
+ Output - when TestProperty is a class -
+ ====== Value Types =======
+ First: SantanuSahoo
+ Second: SantanuSahoo
+
+ ====== Reference Types =======
+ First: Manmath  Sahoo
+ Second: Manmath  Sahoo
  
+ ==== Now chnage the name in the lazy property itself ====
+ First: Samar Sahoo
  
- SO the final verdict is that lazy porperty only update if it is of reference type. If the variable is of value type, it does not update.
+ Output - when TestProperty is a struct -
+ ====== Value Types =======
+ First: SantanuSahoo
+ Second: SantanuSahoo
+
+ ====== Reference Types =======
+ First: Manmath  Sahoo
+ Second: Manmath  Sahoo
+ 
+ ==== Now chnage the name in the lazy property itself ====
+ First: Samar Sahoo
+ 
+
+ So the output totally depens upon what you are updating the object or the property from which you are calculating lazy property. But lazy property always run once.
+ So changing name will not affect lazy here.
+ 
+ 🧠 So no matter the type -
+ lazy initializer runs ONCE
+ result is stored
+ never auto-recomputed
+ 
  */
-
-class UserViewModel {
-    
-    // Raw data (might come from API or DB)
-    var valueTypeUsers: [String] = [
-        "Alice Johnson",
-        "Bob Smith",
-        "Charlie Williams",
-        "Diana Ross",
-        "Edward Norton"
-    ]
-    
-    var refTypeUsers: UserData = UserData(name: "Alice")
-    var valueTypeUserName: String = "Samir"
-    
-    // Lazy property: computed only when accessed the first time
-    lazy var sortedValueTypeUsers: [String] = {
-        print("Sorting users...") // just to demonstrate when it runs
-        return valueTypeUsers.sorted()
-    }()
-    
-    lazy var valueTypeUsersCountText: String = {
-        return "Total users: \(valueTypeUsers.count)"
-    }()
-    
-    lazy var changeValueUserName: String = {
-        return valueTypeUserName
-    }()
-    
-    lazy var changeRefUser: UserData = {
-        refTypeUsers.name = "Bob"
-        return refTypeUsers
-    }()
-        
-    
-    func testLazyProperty() {
-        // At this point, sortedUsers has NOT been computed yet
-        print("Before accessing sortedUsers")
-
-        print("------- Value Types --------")
-//        // First access triggers computation
-//        print(self.sortedValueTypeUsers)
-//        // Console: "Sorting users..."
-//        // ["Alice Johnson", "Bob Smith", "Charlie Williams", "Diana Ross", "Edward Norton"]
-//
-//        // Accessing again will NOT recompute, it reuses the stored as it stores value types in it.
-//        print(self.sortedValueTypeUsers)
-        
-
-        // Lazy property for count text
-//        print(self.valueTypeUsersCountText) // "Total users: 5"
-        
-        print(self.changeValueUserName)     // Samir
-        
-        print("------- Reference Types --------")
-        
-        print(self.changeRefUser.name)      // Bob
-    }
-    
-    func addNewOne() {
-//        valueTypeUsers.append("Chamela Struat")
-//        print("After addition :: \(self.sortedValueTypeUsers)")
-//        print("After addition :: \(self.valueTypeUsersCountText)")
-        valueTypeUserName = "Gautam"
-        print("After addition :: \(self.valueTypeUserName)")
-        print("After addition changed value type user name :: \(self.changeValueUserName)")
-        
-        
-        refTypeUsers.name = "Berlin"
-        print("After addition :: \(self.changeRefUser.name)")
-    }
-}
-
