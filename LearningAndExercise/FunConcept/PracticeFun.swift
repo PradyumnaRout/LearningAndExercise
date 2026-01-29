@@ -8,11 +8,11 @@
 import SwiftUI
 
 struct PracticeFun: View {
-    @State var obj = ClassVsStruct()
+    var obj = EqualityVSIdentity()
     
     var body: some View {
         Button {
-            obj.executeARC()
+            obj.experiment()
         } label: {
             Text("Update")
         }
@@ -24,6 +24,178 @@ struct PracticeFun: View {
 #Preview {
     PracticeFun()
 }
+
+
+
+// MARK: == VS ===  (Equality VS Identity) Operator.
+/*
+ ==  -> Equality    -- Equality operator checks for values
+ === -> Identity    -- Identity operator only checks for reference. It compares the address. So it will only work for                   Reference Type.
+ 
+ 
+ 
+ 
+ */
+
+class EqualityVSIdentity {
+    let x = 5
+    let y = 5
+    
+    func experiment() {
+        //MARK: Execution: 1
+        if x == y {
+            print("Yes")
+        }
+        
+        //MARK: Execution: 2
+        /*
+        if x === y {
+            print("Identity")
+        }
+         Error - Argument type 'Int' expected to be an instance of a class or class-constrained type
+         The error shows that the identity operator will only works for Class Type / Reference Type.
+         */
+        
+        //MARK: Execution: 3 - Let use a struct type to cross verify it
+        /*
+        let emp1 = EmployeeStruct(name: "iOS")
+        let emp2 = EmployeeStruct(name: "Android")
+        
+        if emp1 === emp2 {
+            print("Identity")
+        }
+         Error - Argument type 'EmployeeStruct' expected to be an instance of a class or class-constrained type
+         This will also give the same error as executino: 2 as struct is also a value type.
+         
+         */
+        
+        //MARK: Execution: 4  Equality operator on struct
+        let person1 = ComparePerson(name: "iOS", country: "India")
+        let person2 = ComparePerson(name: "iOS", country: "China")
+        
+        if person1 == person2 {
+            print("Both are same!")
+        }
+        
+        // Error - Binary operator '==' cannot be applied to two 'ComparePerson' operands
+        // Here in sturct also equality opertor will show error, because it does not know what to compare,
+        // Which property it needs to compare.
+        // In this case we need to conform the struct to Equatable protocol to make the struct comparable
+        // Internally the Equatable protocol creates method to compare to struct object.
+        // We can also create custom equatable function like we need to compare two struct object based on some specific property.
+        
+        
+        //MARK: Execution: 5
+        let classPerson1 = ComparePersonClass(name: "iOS", country: "India")
+        let classPerson2 = ComparePersonClass(name: "iOS", country: "India")
+        
+        // Without conforming to Equatable protocol, we can not compare, because equatable operator does not know what to compare.
+        if classPerson1 == classPerson2 {
+            print("They are same.")
+        }
+        
+        
+        //MARK: Execution: 5 -- Identity operator in class.
+        var personID1 = ComparePersonClass(name: "iOS", country: "India")
+        var personID2 = ComparePersonClass(name: "iOS", country: "India")
+        
+        // Compare personID1 and personID2
+        // This will go for the else block because the address of personID1 and personID2 are different.
+        // Because they are two different objects
+        if personID1 === personID2 {
+            print("personID1 & personID2 Are Same")
+        } else {
+            print("personID1 & personID2 Are Not Same")
+        }
+        
+        
+        // Now lets assing the personID1 to a variable and compare them
+        // Here it will print "personID1 & personID3 Are Same" because in case of class/reference type when we copy object, actually we copy the reference of the object.
+        var personID3 = personID1
+        if personID1 == personID3 {
+            print("personID1 & personID3 Are Same")
+        } else {
+            print("personID1 & personID3 Are Same")
+        }
+        
+        
+        //MARK: Execution: 6
+        var personObj1 = ComparePersonClass(name: "iOS", country: "India")
+        var personObj2 = personObj1
+        // Lets print the address of personObj1 and personObj1 and it will print the same value as you know.
+        print("personObj1 address: \(Unmanaged.passUnretained(personObj1).toOpaque())")
+        print("personObj2 address: \(Unmanaged.passUnretained(personObj2).toOpaque())")
+        
+        
+        // Now change the country of personObj2
+        personObj2.country = "United Kingdom"
+        print("\n*******************")
+        print("value of personObj1: \(personObj1.name) and \(personObj1.country)")
+        print("personObj1 address: \(Unmanaged.passUnretained(personObj1).toOpaque())")
+        print("personObj2 address: \(Unmanaged.passUnretained(personObj2).toOpaque())")
+        // You can see in console the country of personObj1 will also change, as the address is same. The two object is also just two pointer referencing the same address. And the value is available in the address.
+        // And the output will be "personObj1 & personObj2 are same"
+        
+        
+        // Now lets change the country of personObj1
+        personObj1.country = "United States"
+        print("\n*******************")
+        print("value of personObj2: \(personObj2.name) and \(personObj2.country)")
+        print("personObj1 address: \(Unmanaged.passUnretained(personObj1).toOpaque())")
+        print("personObj2 address: \(Unmanaged.passUnretained(personObj2).toOpaque())")
+        // In this case also the address will be same and the values also.
+        
+        
+        // Now assign a new object to personObj1 and check
+        personObj1 = ComparePersonClass(name: "React", country: "China")
+        print("\n*******************")
+        print("personObj1 address: \(Unmanaged.passUnretained(personObj1).toOpaque())")
+        print("personObj2 address: \(Unmanaged.passUnretained(personObj2).toOpaque())")
+        // Now here you will see the address will be different and the else block will execute in identity operator.
+        // Because now we are not chnaging the value in that object, but we are assigning a new object to personObj1
+        // which will have a new memeory address.
+
+        
+        
+        if personObj1 === personObj2 {
+            print("personObj1 & personObj2 are same")
+        } else {
+            print("personObj1 & personObj2 are not same")
+        }
+        
+    }
+}
+
+struct ComparePerson: Equatable{
+    var name: String
+    var country: String
+    
+    // Here equality will happen only based on name property.
+    static func ==(lhs: ComparePerson, rhs: ComparePerson) -> Bool {
+        return lhs.name == rhs.name
+    }
+}
+
+
+class ComparePersonClass: Equatable {
+    var name: String
+    var country: String
+    
+    init(name: String, country: String) {
+        self.name = name
+        self.country = country
+    }
+    
+    
+    // In case of class if you confrom to Equatable protocol, it is mandatory to implement the == method otherwise it will give error
+    // Error - Type 'ComparePersonClass' does not conform to protocol 'Equatable'
+    static func ==(lhs: ComparePersonClass, rhs: ComparePersonClass) -> Bool {
+        return lhs.name == rhs.name && lhs.country == rhs.country
+    }
+}
+
+
+
 
 // MARK: - Any and AnyObject in Swift
 
@@ -178,7 +350,6 @@ class EmployeeClass {
     }
 }
 
-
 // MARK: ARC IN CLASS AND STRUCT
 class Parent {
     weak var child: Child?
@@ -226,10 +397,6 @@ class Child {
 
  So Swift asks: How big is Parent?
  */
-
-
-
-
 
 
 

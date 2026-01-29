@@ -220,6 +220,9 @@
         }
       }
     },
+    "Change" : {
+
+    },
     "Change Color" : {
       "localizations" : {
         "de" : {
@@ -688,6 +691,9 @@
         }
       }
     },
+    "Next" : {
+
+    },
     "Next Screen" : {
       "localizations" : {
         "de" : {
@@ -991,6 +997,9 @@
         }
       }
     },
+    "Sec Screen" : {
+
+    },
     "Second" : {
       "localizations" : {
         "de" : {
@@ -1082,6 +1091,9 @@
           }
         }
       }
+    },
+    "Third Screen" : {
+
     },
     "title" : {
       "localizations" : {

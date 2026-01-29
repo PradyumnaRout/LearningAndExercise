@@ -17,7 +17,7 @@ struct LearningAndExerciseApp: App {
 
     var body: some Scene {
         WindowGroup {
-            PracticeFun()
+            CustomEnvironmentUsages()
 //            PracticeCombine()
 //            PracticeConcurrency()
 //            BookListView()

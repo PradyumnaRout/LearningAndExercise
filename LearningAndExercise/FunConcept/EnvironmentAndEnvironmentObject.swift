@@ -299,9 +299,43 @@ struct CustomEnvironmentUsages2: View {
             Text("Point value directly: \(value.value)")
             Text("point Value as key/value: \(valueAsKeyValue.value)")
             Text("Screen Type: \(screenType.type)")
+            
+            Button("Change") {
+//                value.value = 20
+                screenType.type = "SEC"
+            }
+            
+            NavigationLink("Next") {
+                CustomEnvironmentUsages3()
+            }
+            
+            RoundedRectangle(cornerRadius: 20)
+                .frame(width: 100, height: 100)
+                .foregroundStyle(screenType.type == "SEC" ? .red : .green)
+            
+            //MARK: BEHAVIOUR OF ENVIRONEMT WITH OBSERVABLEOBJECT AND OBSERVABLE MACRO
+            /*
+             Here the screenType is of ObservableObject and if I will change its type then you can see the color of the rectangle will not change to red, because here UI will not notify on chnage of screen type.
+             
+             
+             But in case of Observable macro (vaule here), when you change it, the UI will update becasue Observable is attached to UI
+             */
         }
+        .navigationTitle("Sec Screen")
     }
 }
+
+struct CustomEnvironmentUsages3: View {
+    @Environment(\.screenType) private var screenType
+    
+    var body: some View {
+        VStack {
+            Text("Screen Type: \(screenType.type)")
+        }
+        .navigationTitle("Third Screen")
+    }
+}
+
 
 // MARK: Important : @Entry macro swift
 // https://swiftwithmajid.com/2024/07/09/introducing-entry-macro-in-swiftui/
@@ -339,6 +373,7 @@ extension EnvironmentValues {
 
 extension EnvironmentValues {
     @Entry var userState2 = UserState.new
+    @Entry var screenType2 = ScreenType(type: "First")
 }
 
 // Usage:
