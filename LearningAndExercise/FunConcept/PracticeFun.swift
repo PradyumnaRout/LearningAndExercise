@@ -8,11 +8,11 @@
 import SwiftUI
 
 struct PracticeFun: View {
-    var obj = EqualityVSIdentity()
+    var obj = DispatchQueueOutput()
     
     var body: some View {
         Button {
-            obj.experiment()
+            obj.execution3()
         } label: {
             Text("Update")
         }
@@ -24,6 +24,106 @@ struct PracticeFun: View {
 #Preview {
     PracticeFun()
 }
+
+
+// MARK: DispatachQueue Output Questions
+class DispatchQueueOutput {
+    func execution1() {
+        // Main Thread is a serial queue
+        // You will see, if you run this it will get crash. As the main thread is serial so here we are blocking the main thread and it will create a deadlock like situation.
+        DispatchQueue.main.sync {
+            print("Step 1")
+        }
+//        print("Step 2")
+    }
+    
+    func execution2() {
+        print("Step 1")
+        
+        DispatchQueue.main.async {
+            print("Step 2")
+        }
+        
+        print("Step 3")
+        
+        /*
+         Output -
+         Step 1
+         Step 3
+         Step 2
+         
+         Because the step2 will not block the current thread.
+         */
+    }
+    
+    func execution3() {
+        for i in 0...5 {
+            print("Step: \(i)")
+        }
+        
+        DispatchQueue.main.async {
+            for i in 6...10 {
+                print("Step: \(i)")
+            }
+        }
+        
+        for i in 11...15 {
+            print("Step: \(i)")
+        }
+        
+        /*
+         Output -
+         Step: 0
+         Step: 1
+         Step: 2
+         Step: 3
+         Step: 4
+         Step: 5
+         Step: 11
+         Step: 12
+         Step: 13
+         Step: 14
+         Step: 15
+         Step: 6
+         Step: 7
+         Step: 8
+         Step: 9
+         Step: 10
+         */
+    }
+    
+    func execution4() {
+        DispatchQueue.main.async {
+            DispatchQueue.main.sync {       // I will block the main thread
+                print("Step 1")
+            }
+            
+            print("Step 2")         // I am waiting for the main thread to be free
+        }
+        
+        // SO it will crash.
+    }
+    
+    func execution5() {
+        print("Step 0")
+        
+        DispatchQueue.main.async {
+            DispatchQueue.global().sync {
+                print("Step 3")
+            }
+            print("Step 4")
+        }
+        print("Step 5")
+        
+        // Output - 0 -- 5 -- 3 -- 4
+    }
+}
+
+
+
+
+
+
 
 
 

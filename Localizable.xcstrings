@@ -223,6 +223,9 @@
     "Change" : {
 
     },
+    "Change Class" : {
+
+    },
     "Change Color" : {
       "localizations" : {
         "de" : {
@@ -239,6 +242,19 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Größe ändern"
+          }
+        }
+      }
+    },
+    "Change Struct" : {
+
+    },
+    "Class: %@, %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Class: %1$@, %2$@"
           }
         }
       }
@@ -272,6 +288,9 @@
           }
         }
       }
+    },
+    "Count is: %lld" : {
+
     },
     "Create" : {
       "localizations" : {
@@ -570,6 +589,9 @@
       }
     },
     "Inbox" : {
+
+    },
+    "Increase count" : {
 
     },
     "Item %lld" : {
@@ -1068,6 +1090,16 @@
           "stringUnit" : {
             "state" : "translated",
             "value" : "Status"
+          }
+        }
+      }
+    },
+    "Struct: %@, %@" : {
+      "localizations" : {
+        "en" : {
+          "stringUnit" : {
+            "state" : "new",
+            "value" : "Struct: %1$@, %2$@"
           }
         }
       }

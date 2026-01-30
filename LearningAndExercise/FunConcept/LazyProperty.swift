@@ -87,3 +87,13 @@ class TestProperty {
  never auto-recomputed
  
  */
+
+
+
+
+// MARK: Lazy Property -
+/**
+ Can we declare a Lazy as let?
+ 
+ Ans - No, we can not declare Lazy property as let. Because when we declare a value as let then it consider as constant wich has a value and fixed space in memeory. But in case of lazy the value and memeory is not determined at the time of declaration. So we can not declare a lazy property as let.
+ */
