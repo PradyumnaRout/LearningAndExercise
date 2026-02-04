@@ -526,6 +526,60 @@ struct ContentAnimatableTextUsingMacro: View {
 
 
 
+// MARK: Animatable Modifier
+struct ProgressScaleModifier: AnimatableModifier {
+    var progress: CGFloat   // 0 → 1 (or any range you want)
+
+    var animatableData: CGFloat {
+        get { progress }
+        set { progress = newValue }
+    }
+
+    func body(content: Content) -> some View {
+        content
+            .scaleEffect(0.5 + progress * 0.5) // example effect
+            .opacity(progress)
+    }
+}
+
+
+struct MultiProgressModifier: AnimatableModifier {
+    var x: CGFloat
+    var y: CGFloat
+
+    var animatableData: AnimatablePair<CGFloat, CGFloat> {
+        get { AnimatablePair(x, y) }
+        set {
+            x = newValue.first
+            y = newValue.second
+        }
+    }
+
+    func body(content: Content) -> some View {
+        content.offset(x: x, y: y)
+    }
+}
+
+
+/*
+ ❌ What is NOT animatable
+
+ Color
+ String
+ Bool
+ Arrays
+ Structs without animatableData
+
+ Only numeric types or AnimatablePair trees work:
+
+ CGFloat
+ Double
+ Angle
+ CGSize
+ CGRect
+ AnimatablePair
+ */
+
 
 
 
