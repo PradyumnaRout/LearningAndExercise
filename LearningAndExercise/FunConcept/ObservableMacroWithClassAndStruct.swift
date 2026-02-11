@@ -450,14 +450,14 @@ struct DropTextField: View {
                 ZStack {
                     if enableSecureField && !isPasswordVisible {
                         SecureField("", text: $text, prompt: Text(placeholder)
-                            .foregroundColor(Color.secondaryFont)
-                            .font(.sora(size: 14, weight: .light))
+                            .foregroundColor(Color.gray)
+                            .font(.system(size: 14, weight: .regular))
                         )
                         .focused($focus)
                     } else {
                         TextField("", text: $text, prompt: Text(placeholder)
-                            .foregroundColor(Color.secondaryFont)
-                            .font(.sora(size: 14, weight: .light))
+                            .foregroundColor(Color.gray)
+                            .font(.system(size: 14, weight: .regular))
                         )
                         .focused($focus)
                         .disabled(disable)
@@ -476,7 +476,6 @@ struct DropTextField: View {
                 )
                 .clipShape(RoundedRectangle(cornerRadius: 10))
                 .background(.black.opacity(0.001))
-                .contentShape(Rectangle())
                 .onTapGesture {
                     focus = true
                 }
