@@ -10,12 +10,14 @@
 		278CDF972EC1A25200DFF375 /* MigrrationMappingModel.xcmappingmodel in Sources */ = {isa = PBXBuildFile; fileRef = 278CDF962EC1A25200DFF375 /* MigrrationMappingModel.xcmappingmodel */; };
 		278CDF9B2EC1A36100DFF375 /* MigrationEntityMigrationPolicy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 278CDF9A2EC1A36100DFF375 /* MigrationEntityMigrationPolicy.swift */; };
 		279655832F111B9700D237D5 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 279655822F111B9700D237D5 /* Localizable.xcstrings */; };
+		27BDB36B2F3A039600F29928 /* Links.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27BDB36A2F3A039600F29928 /* Links.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
 		278CDF962EC1A25200DFF375 /* MigrrationMappingModel.xcmappingmodel */ = {isa = PBXFileReference; lastKnownFileType = wrapper.xcmappingmodel; path = MigrrationMappingModel.xcmappingmodel; sourceTree = "<group>"; };
 		278CDF9A2EC1A36100DFF375 /* MigrationEntityMigrationPolicy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MigrationEntityMigrationPolicy.swift; sourceTree = "<group>"; };
 		279655822F111B9700D237D5 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
+		27BDB36A2F3A039600F29928 /* Links.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Links.swift; sourceTree = "<group>"; };
 		27FE0CEE2EA2127F00B744DB /* LearningAndExercise.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = LearningAndExercise.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
@@ -54,6 +56,7 @@
 		27FE0CE52EA2127F00B744DB = {
 			isa = PBXGroup;
 			children = (
+				27BDB36A2F3A039600F29928 /* Links.swift */,
 				278CDF9A2EC1A36100DFF375 /* MigrationEntityMigrationPolicy.swift */,
 				278CDF962EC1A25200DFF375 /* MigrrationMappingModel.xcmappingmodel */,
 				279655822F111B9700D237D5 /* Localizable.xcstrings */,
@@ -148,6 +151,7 @@
 			files = (
 				278CDF972EC1A25200DFF375 /* MigrrationMappingModel.xcmappingmodel in Sources */,
 				278CDF9B2EC1A36100DFF375 /* MigrationEntityMigrationPolicy.swift in Sources */,
+				27BDB36B2F3A039600F29928 /* Links.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
