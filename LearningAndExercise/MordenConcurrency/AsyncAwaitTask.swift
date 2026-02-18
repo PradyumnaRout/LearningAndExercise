@@ -368,3 +368,97 @@ class AsyncTest {
 
  Runs on Swift’s cooperative thread pool
  */
+
+
+// MARK: Async let execution order -
+class Test {
+    func foo1() async -> Bool {
+        for i in 0..<3 {
+            print("--\(i)")
+        }
+        return true
+    }
+    
+    func foo2() async -> Bool {
+        for i in 3..<6 {
+            print("--\(i)")
+        }
+        return true
+    }
+    
+    func execute() async {
+        async let a = foo1()
+        async let b = foo2()
+        print("Starting the execution")
+        let (_, _) = await (a, b)
+    }
+    /*
+     Output -
+     Starting the execution
+     --3
+     --4
+     --5
+     --0
+     --1
+     --2
+     
+     🔎 Why This Happens
+     1️⃣ async let starts tasks immediately When you write:
+     async let a = foo1()
+     async let b = foo2()
+     
+     Both foo1() and foo2() start running immediately and concurrently. They do NOT wait for await.
+     
+     2️⃣ Why "Starting the execution" prints first
+
+     Even though the tasks start immediately, Swift's concurrency scheduler doesn't guarantee they will run before the next line. So:
+
+     print("Starting the execution")
+     runs synchronously on the current task before the async child tasks get CPU time. That’s why:
+
+     Starting the execution
+     
+     3️⃣ Why foo2() prints before foo1()?
+
+     There is no ordering guarantee between concurrent tasks. The system scheduler happened to execute foo2() first.
+     */
+    
+    func funcA() async -> String {
+        print("A start")
+        try? await Task.sleep(for: .seconds(6))
+        return "A"
+    }
+    
+    func funcB() async -> String {
+        print("B start")
+        try? await Task.sleep(for: .seconds(6))
+        return "B"
+    }
+    
+    func execute2() async {
+        async let resultA = funcA()
+        async let resultB = await funcB()
+        
+        print("Both have been triggered")
+        await print(resultA, resultB)
+    }
+    /*
+     Output -
+     * when async let resultB = await funcB()
+     Both have been triggered
+     B start
+     A start
+     A B
+     
+     Int the above case the B Start will print first because it will suspend the execution because await is before it.
+     SO here one questin may rise that, then why Both have been triggered prints before B start. It should have printed after B start. But the answer is scheduler. The await suspend the execution, but the scheduler execute it first.
+     And print("B start") will start when funcB() begins execution — not when it is scheduled.
+     
+     * when async let resultB = funcB()
+     Both have been triggered
+     A start
+     B start
+     A B
+     */
+}
+

@@ -7,3 +7,5 @@
 
 // MARK: SwiftUI Pager - https://medium.com/@jenya.dev/a-guide-to-horizontal-scrollview-with-page-control-in-swiftui-59a0a1cb889d
 
+// pinned header - https://levelup.gitconnected.com/swiftui-all-kinds-of-pinned-headers-4af878b50b85
+
